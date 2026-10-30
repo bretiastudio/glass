@@ -1,0 +1,102 @@
+---
+import Wordmark from './Wordmark.astro';
+---
+
+<!--
+  Opening sequence. Rendered only on the home page and shown only when the
+  inline gate in BaseLayout sets html[data-intro="play"]. Decorative: the real
+  content is in the DOM underneath and reachable throughout.
+-->
+<div class="intro" data-intro-root aria-hidden="true">
+  <div class="intro__veil" data-intro-veil></div>
+  <div class="intro__glow" data-intro-glow></div>
+  <div class="intro__mark" data-intro-mark>
+    <Wordmark />
+  </div>
+</div>
+
+<script>
+  import { initIntro } from '../scripts/intro';
+  initIntro();
+</script>
+
+<style>
+  .intro {
+    display: none;
+  }
+
+  :global(html[data-intro='play']) .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    /* Fail-safe: if the script never runs, get out of the way. */
+    animation: intro-failsafe 1ms linear 6s forwards;
+  }
+
+  .intro__veil {
+    position: absolute;
+    inset: 0;
+    background: var(--c-ink-0);
+  }
+
+  .intro__glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(90vmin, 34rem);
+    aspect-ratio: 1.6;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgb(184 166 140 / 0.16),
+      rgb(184 166 140 / 0.06) 45%,
+      transparent
+    );
+    opacity: 0;
+  }
+
+  .intro__mark {
+    position: relative;
+    width: min(64vw, 27.5rem);
+    color: var(--c-white);
+    transform-origin: 50% 50%;
+  }
+
+  /* Letters start hidden; scripts/intro.ts reveals them. */
+  .intro__mark :global(.wordmark__letter) {
+    opacity: 0;
+  }
+
+  /* While the intro plays, the hero content waits underneath. */
+  :global(html[data-intro='play'] [data-intro-reveal]) {
+    opacity: 0;
+    animation: intro-failsafe-reveal 1ms linear 6s forwards;
+  }
+
+  :global(html[data-intro='play'] [data-hero-mark]) {
+    opacity: 0;
+    animation: intro-failsafe-mark 1ms linear 6s forwards;
+  }
+
+  @keyframes intro-failsafe {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  @keyframes intro-failsafe-reveal {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes intro-failsafe-mark {
+    to {
+      opacity: var(--mark-opacity);
+    }
+  }
+</style>

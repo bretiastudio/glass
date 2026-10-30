@@ -1,0 +1,102 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+import { SITE } from '../config/site';
+---
+
+<LegalLayout title="Privacy policy" updated="[data di pubblicazione]">
+  <p>
+    Questa informativa descrive come vengono trattati i dati personali degli utenti che visitano il sito di
+    {SITE.name}, ai sensi degli articoli 13 e 14 del Regolamento (UE) 2016/679 («GDPR») e del D.lgs. 196/2003
+    («Codice Privacy»), come modificato dal D.lgs. 101/2018.
+  </p>
+
+  <h2>1. Titolare del trattamento</h2>
+  <p>
+    <span class="ph">[Ragione sociale]</span>, con sede in <span class="ph">[indirizzo completo]</span>,
+    {SITE.city} ({SITE.region}), P. IVA <span class="ph">[numero]</span>.<br />
+    Contatto per le richieste privacy: <span class="ph">[indirizzo email]</span>.
+  </p>
+
+  <h2>2. Quali dati trattiamo</h2>
+  <p><strong>Dati di navigazione.</strong>
+    Come avviene per qualsiasi sito web, i server che ospitano il sito registrano automaticamente alcuni dati
+    tecnici necessari al funzionamento e alla sicurezza: indirizzo IP, data e ora della richiesta, pagina
+    richiesta, tipo di browser e sistema operativo. Questi dati non vengono usati per identificare l'utente né
+    per profilarlo.
+  </p>
+  <p><strong>Dati forniti volontariamente.</strong>
+    Il sito non contiene moduli di contatto, di prenotazione o di iscrizione. Se ci scrivi tramite Instagram o
+    agli altri recapiti indicati, tratteremo i dati che ci comunichi esclusivamente per rispondere alla tua
+    richiesta.
+  </p>
+  <p>
+    Il sito <strong>non utilizza</strong> strumenti di statistica (analytics), pubblicità, profilazione o
+    tracciamento, e <strong>non incorpora</strong> contenuti o pulsanti di social network. I caratteri
+    tipografici, le immagini e i video sono ospitati sullo stesso server del sito: la loro visualizzazione non
+    comporta alcuna comunicazione verso servizi di terze parti.
+  </p>
+
+  <h2>3. Finalità e base giuridica</h2>
+  <ul>
+    <li>
+      Garantire il funzionamento e la sicurezza del sito (dati di navigazione): legittimo interesse del
+      titolare, art. 6, par. 1, lett. f) GDPR.
+    </li>
+    <li>
+      Rispondere alle richieste che ci invii: esecuzione di misure richieste dall'interessato, art. 6, par. 1,
+      lett. b) GDPR.
+    </li>
+    <li>
+      Adempiere a obblighi di legge e difendere un diritto in sede giudiziaria, ove necessario: art. 6, par. 1,
+      lett. c) e f) GDPR.
+    </li>
+  </ul>
+
+  <h2>4. Conservazione</h2>
+  <p>
+    I dati di navigazione sono conservati dal fornitore di hosting per <span class="ph">[periodo, ad es. 30 giorni]</span>,
+    salvo necessità di accertare reati informatici. I dati delle richieste ricevute sono conservati per il tempo
+    necessario a gestirle.
+  </p>
+
+  <h2>5. Destinatari</h2>
+  <p>
+    I dati possono essere trattati dal fornitore di hosting del sito, <span class="ph">[nome del fornitore]</span>,
+    nominato responsabile del trattamento ai sensi dell'art. 28 GDPR. I dati non sono diffusi né ceduti a terzi.
+  </p>
+
+  <h2>6. Trasferimenti fuori dall'Unione europea</h2>
+  <p>
+    <span class="ph">[Da verificare in base al fornitore di hosting scelto.]</span> Qualora i dati fossero
+    trasferiti fuori dallo Spazio economico europeo, il trasferimento avverrà sulla base di una decisione di
+    adeguatezza della Commissione europea o delle clausole contrattuali standard (artt. 45–46 GDPR).
+  </p>
+
+  <h2>7. Link a Instagram</h2>
+  <p>
+    Il sito contiene semplici collegamenti al profilo Instagram di {SITE.name}. Nessun dato viene inviato a Meta
+    finché non clicchi il collegamento; da quel momento si applica l'informativa di Meta Platforms Ireland Ltd.,
+    consultabile su
+    <a href="https://privacycenter.instagram.com/policy" target="_blank" rel="noopener">privacycenter.instagram.com</a>.
+  </p>
+
+  <h2>8. I tuoi diritti</h2>
+  <p>
+    In qualsiasi momento puoi chiedere l'accesso ai tuoi dati, la rettifica, la cancellazione, la limitazione del
+    trattamento o la portabilità, e opporti al trattamento basato sul legittimo interesse (artt. 15–22 GDPR),
+    scrivendo a <span class="ph">[indirizzo email]</span>.
+  </p>
+  <p>
+    Hai inoltre il diritto di proporre reclamo al Garante per la protezione dei dati personali
+    (<a href="https://www.garanteprivacy.it" target="_blank" rel="noopener">www.garanteprivacy.it</a>).
+  </p>
+
+  <h2>9. Cookie</h2>
+  <p>Per l'uso di cookie e tecnologie simili consulta la <a href="/cookie-policy">cookie policy</a>.</p>
+
+  <h2>10. Modifiche</h2>
+  <p>
+    Questa informativa può essere aggiornata, ad esempio se in futuro il sito offrirà nuove funzioni come la
+    prenotazione online. La data dell'ultimo aggiornamento è indicata in alto.
+  </p>
+</LegalLayout>

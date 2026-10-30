@@ -1,0 +1,167 @@
+---
+import Wordmark from './Wordmark.astro';
+import { SITE } from '../config/site';
+
+const year = new Date().getFullYear();
+const { address, phone, email } = SITE.contact;
+const { companyName, vatNumber } = SITE.legal;
+---
+
+<footer class="footer" id="contatti" aria-labelledby="contatti-title">
+  <div class="container">
+    <div class="footer__mark">
+      <Wordmark label={SITE.name} />
+    </div>
+
+    <div class="footer__grid">
+      <section class="footer__block" aria-labelledby="contatti-title">
+        <h2 id="contatti-title" class="label footer__heading">Contatti</h2>
+        <address class="footer__text">
+          {address ?? `${SITE.city} · ${SITE.region}`}
+          {phone && <a class="footer__link" href={`tel:${phone.replace(/\s+/g, '')}`}>{phone}</a>}
+          {email && <a class="footer__link" href={`mailto:${email}`}>{email}</a>}
+        </address>
+      </section>
+
+      <section class="footer__block" aria-labelledby="instagram-title">
+        <h2 id="instagram-title" class="label footer__heading">Instagram</h2>
+        <p class="footer__text">
+          <a class="footer__link" href={SITE.instagram.url} target="_blank" rel="noopener">
+            @{SITE.instagram.handle}
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" /></svg>
+            <span class="sr-only">(si apre in una nuova scheda)</span>
+          </a>
+        </p>
+      </section>
+    </div>
+
+    <div class="footer__legal">
+      <p>
+        {`© ${year} ${companyName ?? SITE.name}`}
+        {vatNumber && <span>{` · P. IVA ${vatNumber}`}</span>}
+      </p>
+      <ul>
+        <li><a href="/privacy-policy">Privacy</a></li>
+        <li><a href="/cookie-policy">Cookie</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-top: var(--section-pad);
+    padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--c-line);
+    background: linear-gradient(180deg, var(--c-ink-0), var(--c-ink-1));
+  }
+
+  .footer__mark {
+    width: min(100%, 15rem);
+    color: var(--c-white);
+  }
+
+  .footer__grid {
+    display: grid;
+    gap: var(--s-6);
+    margin-top: var(--s-7);
+  }
+
+  .footer__block {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+  }
+
+  .footer__heading {
+    color: var(--c-silver-dim);
+  }
+
+  .footer__text {
+    display: grid;
+    gap: var(--s-1);
+    font-style: normal;
+    font-size: var(--fs-lead);
+    font-weight: 320;
+    color: var(--c-silver);
+  }
+
+  .footer__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 44px;
+    justify-self: start;
+    color: var(--c-white);
+    transition: color var(--d-fast) ease;
+  }
+
+  .footer__link svg {
+    width: 0.65em;
+    height: 0.65em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+  }
+
+  .footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-8);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--c-line);
+    font-size: var(--fs-small);
+    color: var(--c-silver-dim);
+  }
+
+  .footer__legal ul {
+    display: flex;
+    gap: var(--s-2);
+    list-style: none;
+    margin: 0 calc(var(--s-3) * -1);
+    padding: 0;
+  }
+
+  .footer__legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: var(--s-3);
+    transition: color var(--d-fast) ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .footer__legal a:hover,
+    .footer__link:hover {
+      color: var(--c-silver);
+    }
+  }
+
+  @media (min-width: 600px) {
+    .footer__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 900px) {
+    .footer__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--s-5);
+    }
+
+    .footer__block:first-child {
+      grid-column: 6 / span 3;
+    }
+
+    .footer__block:last-child {
+      grid-column: 10 / span 3;
+    }
+
+    .footer__grid {
+      margin-top: calc(var(--s-7) * -1);
+    }
+  }
+</style>

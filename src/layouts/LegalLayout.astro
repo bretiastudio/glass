@@ -1,0 +1,118 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { SITE } from '../config/site';
+
+interface Props {
+  title: string;
+  updated: string;
+}
+
+const { title, updated } = Astro.props;
+---
+
+<!-- noindex until the drafts are reviewed and the placeholders are filled. -->
+<BaseLayout title={`${title} — ${SITE.name}`} description={`${title} del sito ${SITE.name}.`} noindex>
+  <article class="legal container">
+    <header class="legal__head">
+      <p class="label legal__eyebrow">Informazioni legali</p>
+      <h1 class="legal__title">{title}</h1>
+      <p class="legal__meta">Ultimo aggiornamento: {updated}</p>
+      <p class="legal__draft" role="note">
+        <strong>Bozza.</strong> Questo testo è una bozza da completare con i dati del titolare (indicati tra
+        parentesi quadre) e da far verificare da un consulente prima della pubblicazione definitiva.
+      </p>
+    </header>
+    <div class="legal__body">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal {
+    padding-top: calc(var(--nav-top) + var(--nav-h) + var(--s-8));
+    padding-bottom: var(--section-pad);
+    max-width: calc(44rem + var(--gutter-l) + var(--gutter-r));
+  }
+
+  .legal__head {
+    display: grid;
+    gap: var(--s-3);
+    padding-bottom: var(--s-6);
+    border-bottom: 1px solid var(--c-line);
+  }
+
+  .legal__eyebrow,
+  .legal__meta {
+    color: var(--c-silver-dim);
+  }
+
+  .legal__meta {
+    font-size: var(--fs-small);
+  }
+
+  .legal__title {
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: var(--track-display);
+  }
+
+  .legal__draft {
+    margin-top: var(--s-3);
+    padding: var(--s-4);
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-m);
+    font-size: var(--fs-small);
+    color: var(--c-silver);
+  }
+
+  .legal__draft strong {
+    font-weight: 500;
+    color: var(--c-champagne);
+  }
+
+  .legal__body {
+    padding-top: var(--s-6);
+    color: var(--c-silver);
+    font-weight: 340;
+  }
+
+  .legal__body :global(h2) {
+    margin-top: var(--s-7);
+    margin-bottom: var(--s-3);
+    font-size: 1.1875rem;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--c-white);
+  }
+
+  .legal__body :global(p),
+  .legal__body :global(ul) {
+    margin: 0 0 var(--s-4);
+  }
+
+  .legal__body :global(ul) {
+    padding-left: 1.1em;
+  }
+
+  .legal__body :global(li + li) {
+    margin-top: var(--s-2);
+  }
+
+  .legal__body :global(a) {
+    color: var(--c-white);
+    text-decoration: underline;
+    text-decoration-color: var(--c-line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  .legal__body :global(strong) {
+    font-weight: 450;
+    color: var(--c-white);
+  }
+
+  .legal__body :global(.ph) {
+    color: var(--c-champagne);
+  }
+</style>

@@ -1,0 +1,262 @@
+/* ==========================================================================
+   GLASS — design foundation
+   Mobile-first: base rules target 320–599px, then min-width breakpoints
+   at 600 (large phone / small tablet), 900 (tablet / laptop), 1280 (desktop).
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/jost-latin-wght.woff2') format('woff2-variations'),
+    url('/fonts/jost-latin-wght.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallback so the swap to Jost does not shift the layout. */
+@font-face {
+  font-family: 'Jost Fallback';
+  src: local('Arial');
+  size-adjust: 92%;
+  ascent-override: 112%;
+  descent-override: 38%;
+}
+
+:root {
+  /* Colour: dark and monochrome. Champagne is light, never a surface. */
+  --c-ink-0: #08090b; /* near-black — page */
+  --c-ink-1: #0e1014; /* between near-black and graphite — section shading */
+  --c-ink-2: #111318; /* deep graphite */
+  --c-ink-3: #1b1d22; /* soft charcoal */
+  --c-silver: #c5c6c9; /* satin silver — secondary text, edges */
+  --c-silver-dim: #8f9197; /* tertiary text, 6.4:1 on ink-0 */
+  --c-white: #f2f0ed; /* muted white — primary text, logo */
+  --c-champagne: #b8a68c; /* warm light only */
+  --c-line: rgb(242 240 237 / 0.09);
+  --c-line-strong: rgb(242 240 237 / 0.16);
+
+  /* Satin glass material */
+  --glass-bg: rgb(22 24 29 / 0.72);
+  --glass-bg-solid: #16181d;
+  --glass-blur: 20px;
+  --glass-edge: rgb(242 240 237 / 0.1);
+  --glass-highlight: rgb(242 240 237 / 0.14);
+
+  /* Typography */
+  --font: 'Jost', 'Jost Fallback', system-ui, sans-serif;
+  --fs-label: 0.6875rem; /* 11px — tracked uppercase labels */
+  --fs-small: 0.8125rem;
+  --fs-body: 1rem;
+  --fs-lead: clamp(1.0625rem, 0.98rem + 0.4vw, 1.25rem);
+  --fs-h2: clamp(1.625rem, 1.3rem + 1.6vw, 2.625rem);
+  --fs-display: clamp(1.875rem, 1.25rem + 3.1vw, 4rem);
+  --track-label: 0.24em;
+  --track-display: -0.012em;
+
+  /* Space (4px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --section-pad: clamp(5rem, 3.5rem + 7vw, 10rem);
+
+  /* Layout */
+  --gutter: clamp(1rem, 0.6rem + 2.2vw, 3rem);
+  --gutter-l: max(var(--gutter), env(safe-area-inset-left));
+  --gutter-r: max(var(--gutter), env(safe-area-inset-right));
+  --container: 76rem;
+  --nav-h: 3.25rem;
+  --nav-top: max(0.625rem, env(safe-area-inset-top));
+
+  /* Shape — angular, like the wordmark's flat terminals */
+  --r-s: 4px;
+  --r-m: 8px;
+  --r-l: 10px;
+
+  /* Motion — values from the animate skill; never ad hoc */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1); /* cinematic entrances (easings.co) */
+  --d-press: 140ms;
+  --d-fast: 160ms;
+  --d-ui: 220ms;
+
+  color-scheme: dark;
+}
+
+@media (min-width: 900px) {
+  :root {
+    --nav-h: 3.5rem;
+    --nav-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--nav-top) + var(--nav-h) + var(--s-4));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--c-ink-0);
+  color: var(--c-white);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  font-weight: 360;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 1px solid var(--c-white);
+  outline-offset: 4px;
+  border-radius: var(--r-s);
+}
+
+::selection {
+  background: rgb(184 166 140 / 0.35);
+  color: var(--c-white);
+}
+
+/* --------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
+
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter-l) + var(--gutter-r));
+  margin-inline: auto;
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+}
+
+.label {
+  font-size: var(--fs-label);
+  font-weight: 460;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--c-silver);
+  /* Trailing tracking would push centred labels off-centre */
+  margin-right: calc(var(--track-label) * -1);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--nav-top);
+  left: var(--gutter-l);
+  z-index: 100;
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-white);
+  color: var(--c-ink-0);
+  border-radius: var(--r-m);
+  font-size: var(--fs-small);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* Satin glass: one material, shared by the navigation and the menu panel. */
+.material {
+  background-color: var(--glass-bg);
+  background-image: linear-gradient(180deg, rgb(242 240 237 / 0.045), rgb(242 240 237 / 0) 60%),
+    url('/brand/grain.webp');
+  background-size: auto, 160px 160px;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+  border: 1px solid var(--glass-edge);
+  /* Light catching the top edge of the material */
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .material {
+    background-color: var(--glass-bg-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .material {
+    background-color: var(--glass-bg-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .material {
+    border-color: var(--c-line-strong);
+  }
+}

@@ -1,0 +1,26 @@
+---
+// Defines each traced wordmark letter once. Every logo on the page references
+// these symbols with <use>, so the path data ships a single time.
+import { LETTERS } from '../assets/brand/wordmark';
+---
+
+<svg class="brand-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    {
+      LETTERS.map((l, i) => (
+        <symbol id={`glass-letter-${i}`} viewBox={l.viewBox}>
+          <path d={l.d} />
+        </symbol>
+      ))
+    }
+  </defs>
+</svg>
+
+<style>
+  .brand-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>
