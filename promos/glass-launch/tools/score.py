@@ -85,54 +85,64 @@ def light_air(speed, hz, dur):
 
 def main():
     ev = asyncio.run(dump_events())
-    D = ev['T']; s = Score(dur=D, T60=1.3)
+    D = ev['T']; B = ev['beats']; s = Score(dur=D, T60=1.3)
     place = s.place
     at = {}
     for e in ev['events']: at.setdefault(e['kind'], []).append(e)
     first = lambda k: at[k][0]
 
-    # ── the bed
-    # the bed plays under movement and stops on the still beats: the headline, the phone, the menu, the Instagram hold,
-    # the closing GLASS (one crystal tone in silence) and the breath before POWERED BY
-    bed = pad(D + 2) * env([(0, 0), (0.55, 0), (2.6, 0.6), (4.4, 0.66), (7.2, 0.55), (7.8, 0.0), (9.3, 0.0), (9.95, 0.5),
-                            (11.4, 0.55), (12.5, 0.42), (12.9, 0.0), (14.75, 0.0), (15.6, 0.42), (16.6, 0.62), (22.25, 0.66),
-                            (22.6, 0.0), (23.5, 0.0), (24.5, 0.34), (25.1, 0.3), (25.6, 0.0), (28.9, 0.0), (29.5, 0.22),
-                            (30.25, 0.0), (D + 2, 0)], int(SR * (D + 2)))
+    # ── the bed: it plays under movement and stops on the still beats — the headline, the phone and its menu, the
+    # Instagram hold, the closing GLASS (one crystal tone in silence) and the breath before POWERED BY
+    bed = pad(D + 2) * env([(0, 0), (0.55, 0), (B['sweep'][1], 0.6), (B['introHold'][1] + 1.1, 0.66), (B['ptrStop'], 0.55),
+                            (B['ptrStop'] + 0.55, 0.0), (B['toNav'][0], 0.0), (B['toNav'][0] + 0.6, 0.5), (B['morph'], 0.55),
+                            (B['unroll'][1] - 0.2, 0.42), (B['unroll'][1] + 0.2, 0.0), (B['mscroll'][0], 0.0), (B['push'][0], 0.42),
+                            (B['push'][1], 0.62), (B['glide'][1] - 0.4, 0.66), (B['glide'][1], 0.0), (B['down'][0], 0.0),
+                            (B['down'][0] + 0.8, 0.34), (B['glow'] - 0.6, 0.3), (B['glow'], 0.0), (B['reveal'][0] + 0.2, 0.0),
+                            (B['reveal'][0] + 0.8, 0.22), (B['reveal'][1] + 0.6, 0.0), (D + 2, 0)], int(SR * (D + 2)))
     place(bed[:int(SR * D)], 0.0, 0.34, -0.12, 0.55); place(np.roll(bed, int(SR * 0.021))[:int(SR * D)], 0.0, 0.34, 0.12, 0.55)
-    place(shaker_pulse(D, 16.45, 22.5, 0.82), 0.0, 0.42, 0.08, 0.35)
+    place(shaker_pulse(D, B['push'][1] - 0.3, B['glide'][0], 0.82), 0.0, 0.42, 0.08, 0.35)
     place(light_air(np.array(ev['light']['speed']), ev['light']['hz'], D), 0.0, 0.2, 0.0, 0.6)
 
-    # ── the name: the light rises, one crystal tone as the letters come into focus
-    e = first('light-rise'); place(air(1.8, 110, 700, 0.8, 0.6), e['t'], 0.32, e['pan'] * 0.6, 0.7, pan_to=0.1)
+    # ── 01 · the light rises; it crosses the name (a high shimmer travelling with it); one crystal tone as it leaves
+    e = first('light-rise'); place(air(1.8, 110, 700, 0.8, 0.6), e['t'], 0.3, e['pan'] * 0.6, 0.7, pan_to=0.1)
     place(sub(41, 2.6), e['t'] + 0.2, 0.1, 0, 0.5)
-    e = first('name'); place(glass(587.33, 3.0, 0.35), e['t'] + 0.35, 0.13, 0, 0.75); place(glass(880, 2.6, 0.25), e['t'] + 0.47, 0.07, 0.15, 0.8)
-    # ── the hand-off: the mark becomes architecture
-    e = first('handoff'); place(air(1.15, 320, 95, 0.8, 0.45), e['t'], 0.4, 0, 0.6); place(sub(49, 1.4), e['t'] + 0.75, 0.32, 0, 0.45)
-    # ── the snap to the nav; three hovers; the bar becomes the phone
-    e = first('snap'); place(air(0.85, 170, 2400, 1.3, 0.75), e['t'] - 0.05, 0.42, -0.1, 0.45, pan_to=0.05); place(sub(66, 0.6), e['t'] + 0.78, 0.22, 0, 0.3)
+    e = first('sweep'); w = B['sweep'][1] - B['sweep'][0]
+    place(air(w + 0.2, 2600, 7200, 1.8, 0.5), e['t'] - 0.05, 0.1, -0.45, 0.6, pan_to=0.45)
+    place(glass(1174.66, 2.4, 0.3), e['t'] + 0.55 * w, 0.05, 0.0, 0.75)
+    place(glass(587.33, 3.0, 0.35), B['sweep'][1] - 0.1, 0.13, 0.1, 0.75); place(glass(880, 2.6, 0.25), B['sweep'][1] + 0.02, 0.06, 0.2, 0.8)
+    # ── the hand-off: the name becomes architecture; 03 · the bar forms
+    e = first('handoff'); place(air(1.15, 320, 95, 0.8, 0.45), e['t'], 0.4, 0, 0.6); place(sub(49, 1.4), e['t'] + 0.75, 0.3, 0, 0.45)
+    e = first('nav-expand'); place(air(0.6, 700, 2400, 1.3, 0.3), e['t'], 0.13, 0, 0.5); place(glass(2349.3, 0.5, 0.4), e['t'] + 0.18, 0.03, 0, 0.45)
+    # ── to the nav (calm, not a snap); three hovers; the bar becomes the phone
+    e = first('approach'); place(air(1.15, 170, 1800, 1.1, 0.6), e['t'], 0.3, -0.1, 0.45, pan_to=0.05); place(sub(66, 0.6), e['t'] + 1.1, 0.14, 0, 0.3)
     for e, f in zip(at['hover'], (2093.0, 2349.3, 2637.0)): place(glass(f, 0.35, 0.5), e['t'], 0.06 * e['v'] / 0.55, e['pan'] * 0.7, 0.4)
-    e = first('bar'); place(air(0.65, 1900, 380, 1.2, 0.35), e['t'], 0.3, 0, 0.5)
+    e = first('bar'); place(air(0.9, 1900, 380, 1.2, 0.35), e['t'], 0.28, 0, 0.5)
     e = first('unroll'); place(air(0.8, 210, 1300, 1.0, 0.55), e['t'], 0.3, 0, 0.5)
-    # ── the phone: two taps, the menu, the scroll
+    # ── the phone: two taps, 03 · the menu forming, the scroll
     for e in at['tap']: place(wood(300, 0.06), e['t'], 0.2, e['pan'] * 0.6, 0.18); place(glass(3136, 0.18, 0.4), e['t'] + 0.006, 0.035, e['pan'] * 0.6, 0.3)
-    e = first('menu-open'); place(air(0.28, 2600, 4200, 1.6, 0.3), e['t'], 0.1, e['pan'] * 0.6, 0.4)
+    e = first('menu-open'); place(air(0.32, 1800, 3800, 1.6, 0.3), e['t'], 0.11, e['pan'] * 0.6, 0.4); place(glass(2637, 0.3, 0.4), e['t'] + 0.12, 0.025, e['pan'] * 0.6, 0.4)
     e = first('scroll'); place(air(0.7, 700, 260, 1.0, 0.4), e['t'], 0.18, 0, 0.4)
-    # ── into film 01, back to the page, the click on 02
-    e = first('push'); place(air(0.85, 120, 1500, 1.1, 0.7), e['t'], 0.45, 0, 0.55); place(sub(55, 1.1), e['t'] + 0.8, 0.28, 0, 0.45)
-    e = first('back'); place(air(0.9, 900, 280, 1.0, 0.45), e['t'], 0.26, -0.1, 0.5, pan_to=0.15)
+    # ── 04 · the portal: a low swell into the frame, the light across it, a felt landing
+    e = first('portal'); w = B['push'][1] - B['push'][0]
+    place(air(w, 100, 1100, 0.9, 0.6), e['t'], 0.4, 0, 0.55); place(sub(55, 1.2), e['t'] + w - 0.05, 0.26, 0, 0.45)
+    e = first('sheen'); place(air(0.85, 3000, 7000, 1.8, 0.5), e['t'], 0.06, -0.3, 0.6, pan_to=0.3); place(glass(1760, 1.8, 0.3), e['t'] + 0.35, 0.05, 0, 0.7)
+    # ── back to the page; 05 · the crystal aperture; the click on 02
+    e = first('back'); place(air(1.0, 900, 280, 1.0, 0.45), e['t'], 0.24, -0.1, 0.5, pan_to=0.15)
+    e = first('iris'); place(air(0.9, 400, 1600, 1.0, 0.25), e['t'], 0.16, 0.1, 0.55); place(glass(1318.5, 1.6, 0.4), e['t'] + 0.05, 0.075, 0.1, 0.65)
     for e in at['click']: place(wood(240, 0.07), e['t'], 0.24, e['pan'] * 0.6, 0.2); place(wood(190, 0.06), e['t'] + 0.07, 0.15, e['pan'] * 0.6, 0.2)
-    e = first('glide'); place(air(1.1, 320, 1300, 1.0, 0.5), e['t'], 0.28, 0.25, 0.5, pan_to=-0.25)
+    e = first('glide'); place(air(1.1, 320, 1300, 1.0, 0.5), e['t'], 0.26, 0.25, 0.5, pan_to=-0.25)
     # ── the page ends on its own name; the light rises behind it, as at the start
-    e = first('descend'); place(air(1.8, 1300, 180, 0.9, 0.35), e['t'], 0.34, 0, 0.6)
+    e = first('descend'); place(air(1.7, 1300, 180, 0.9, 0.35), e['t'], 0.32, 0, 0.6)
     e = first('bookend'); place(air(1.8, 110, 700, 0.8, 0.6), e['t'], 0.3, -0.05, 0.7, pan_to=0.08)
     place(sub(41, 2.2), e['t'] + 0.1, 0.13, 0, 0.45); place(glass(587.33, 2.6, 0.35), e['t'] + 0.55, 0.15, 0, 0.6); place(glass(880, 2.2, 0.25), e['t'] + 0.67, 0.07, 0.12, 0.65)
     e = first('recede'); place(air(0.9, 600, 120, 0.8, 0.3), e['t'], 0.2, 0, 0.6)
-    # ── silence, then BRETÌA: a brighter two-note signature in the same room
-    e = first('signature'); t0 = e['t'] + 0.05
-    place(sub(55, 1.6), t0, 0.3, 0, 0.4)
+    # ── silence, then 07 · BRETÌA: the reflection's shimmer crosses with the reveal, then a brighter two-note signature
+    e = first('signature'); w = B['reveal'][1] - B['reveal'][0]
+    place(air(w + 0.1, 2600, 7000, 1.8, 0.45), e['t'], 0.1, -0.4, 0.6, pan_to=0.4)
+    t0 = e['t'] + 0.55 * w
+    place(sub(55, 1.6), t0, 0.28, 0, 0.4)
     place(glass(880.0, 2.2, 0.8), t0, 0.2, -0.08, 0.6); place(wood(440, 0.09), t0, 0.08, -0.08, 0.3)
     place(glass(1318.5, 2.6, 0.7), t0 + 0.19, 0.17, 0.1, 0.65); place(wood(659, 0.08), t0 + 0.19, 0.06, 0.1, 0.3)
-    e = first('sweep'); place(air(0.9, 2400, 6500, 1.8, 0.55), e['t'], 0.07, -0.3, 0.6, pan_to=0.3)
 
     out = os.path.join(ROOT, 'out', 'sfx.wav'); s.write(out, peak_db=-4.5)
 
