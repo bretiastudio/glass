@@ -66,7 +66,7 @@ export function initIntro() {
   function skip() {
     if (done) return;
     done = true;
-    const FADE = 260;
+    const FADE = 200;
     const targets = heroMark ? [...reveals, heroMark] : reveals;
     const from = targets.map((el) => getComputedStyle(el).opacity);
     const rootFrom = getComputedStyle(root).opacity;
@@ -150,7 +150,8 @@ export function initIntro() {
       play(
         el,
         [
-          { opacity: 0, translate: '0 10px' },
+          // The nav is anchored to the top edge, so it settles down; the copy rises.
+          { opacity: 0, translate: el.matches('.nav') ? '0 -8px' : '0 10px' },
           { opacity: 1, translate: '0 0' },
         ],
         { delay: T + 450 + i * 80, duration: 700, easing: EASE_OUT },

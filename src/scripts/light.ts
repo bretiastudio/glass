@@ -22,13 +22,15 @@ export function initLight() {
   let visible = true;
   let raf = 0;
   let last = 0;
-  let heroRect = hero.getBoundingClientRect();
+  // Document-relative box, measured on resize only; the viewport top is derived
+  // from scrollY so scrolling never triggers a layout read.
+  let heroBox = { left: 0, top: 0, width: 0, height: 0 };
   const pos = { x: 0, y: 0, vx: 0, vy: 0 };
   const target = { x: 0, y: 0 };
 
   const rest = () => {
-    target.x = heroRect.width * 0.72;
-    target.y = heroRect.height * 0.3;
+    target.x = heroBox.width * 0.72;
+    target.y = heroBox.height * 0.3;
   };
 
   const write = () => {
@@ -61,13 +63,14 @@ export function initLight() {
 
   const onMove = (e: PointerEvent) => {
     if (e.pointerType !== 'mouse') return;
-    target.x = e.clientX - heroRect.left;
-    target.y = e.clientY - heroRect.top;
+    target.x = e.clientX - heroBox.left;
+    target.y = e.clientY + window.scrollY - heroBox.top;
     wake();
   };
 
   const measure = () => {
-    heroRect = hero.getBoundingClientRect();
+    const r = hero.getBoundingClientRect();
+    heroBox = { left: r.left, top: r.top + window.scrollY, width: r.width, height: r.height };
   };
 
   const enable = () => {
@@ -80,7 +83,6 @@ export function initLight() {
     document.documentElement.classList.add('light-live');
     write();
     window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('scroll', measure, { passive: true });
     window.addEventListener('resize', measure);
   };
 
@@ -92,7 +94,6 @@ export function initLight() {
     document.documentElement.classList.remove('light-live');
     light.style.transform = '';
     window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('scroll', measure);
     window.removeEventListener('resize', measure);
   };
 

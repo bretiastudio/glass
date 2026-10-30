@@ -218,8 +218,15 @@ const links = [
     transition: opacity var(--d-ui) var(--ease-out), visibility 0s;
   }
 
-:global(html.menu-open) {
+  :global(html.menu-open) {
     overflow: hidden;
+  }
+
+  :global(html.menu-instant) .menu,
+  :global(html.menu-instant) .menu__link,
+  :global(html.menu-instant) .menu-scrim,
+  :global(html.menu-instant) .nav__toggle-icon i {
+    transition: none;
   }
 
   .menu__list {

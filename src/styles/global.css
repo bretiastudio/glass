@@ -149,6 +149,12 @@ a {
   text-decoration: none;
 }
 
+/* The default tap highlight is disabled, so links answer the press themselves:
+   instantly on pointer-down, nothing to wait for. */
+a:not(.menu__link):active {
+  opacity: 0.6;
+}
+
 button {
   font: inherit;
   color: inherit;

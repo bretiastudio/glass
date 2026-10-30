@@ -29,16 +29,32 @@ export function initMenu() {
     }
   };
 
-  toggle.addEventListener('click', () => set(!open));
+  // Keyboard-initiated changes are instant; pointer-initiated ones animate.
+  const instant = (fn: () => void) => {
+    document.documentElement.classList.add('menu-instant');
+    fn();
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => document.documentElement.classList.remove('menu-instant')),
+    );
+  };
+
+  // `detail === 0` means the click came from Enter/Space, not a pointer.
+  toggle.addEventListener('click', (e) => (e.detail === 0 ? instant(() => set(!open)) : set(!open)));
   scrim.addEventListener('click', () => set(false));
 
   // Close on selection; the anchor navigation proceeds normally.
-  links.forEach((link) => link.addEventListener('click', () => set(false, { restoreFocus: false })));
+  links.forEach((link) =>
+    link.addEventListener('click', (e) => {
+      const close = () => set(false, { restoreFocus: false });
+      if (e.detail === 0) instant(close);
+      else close();
+    }),
+  );
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && open) {
       e.preventDefault();
-      set(false);
+      instant(() => set(false));
     }
   });
 
