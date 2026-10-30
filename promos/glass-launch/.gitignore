@@ -1,3 +1,5 @@
 comp/frames/
 out/_frames/
 out/probe/tracks.json
+out/render-*.log
+out/*.mp4.tmp

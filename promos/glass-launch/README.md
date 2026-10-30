@@ -42,12 +42,15 @@ python3 -I tools/score.py
 ```
 
 ```bash
-python3 ~/.claude/skills/onetake/scripts/render.py comp/comp.html --out out/draft.mp4 --sfx out/sfx.wav
+python3 ~/.claude/skills/onetake/scripts/render.py comp/comp.html --out out/draft.mp4 --sfx out/sfx.wav --gap 2.5 --samples-max 64
 ```
 
 ```bash
 python3 ~/.claude/skills/onetake/scripts/verify_promo.py out/draft.mp4 --comp comp/comp.html --shots 0,0.5,2.95,4.5,7.9,9.3,10.1,11.45,12.25,13.0,13.68,14.72,15.75,16.55,18.85,19.75,20.15,21.45,22.55,23.5,25.3,27.6,28.45,31.5
 ```
+
+`--gap 2.5` keeps the shutter's copies close enough that thin type smears instead of stepping (the default 6 px
+left visible copies on the scrolling text in the first draft).
 
 Preview in a browser: `comp/comp.html?play`, or pin a frame with `comp/comp.html?t=6.4&hud`. The monochrome
 logo study: `?logo=mono`. The 4K60 master (`render.py … --final`) is rendered only after the draft is approved.
