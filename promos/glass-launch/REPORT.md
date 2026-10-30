@@ -1,10 +1,10 @@
-# GLASS — Riflesso · report del film (bozza 1080p30, v1)
+# GLASS — Riflesso · report del film (bozza 1080p30, v2)
 
 Stato: **bozza renderizzata e verificata, in attesa di approvazione.** Il master 4K60 non è stato renderizzato.
-Manca il file originale del logo BRETÌA: il cartello finale contiene un segnaposto dichiarato (vedi *Limiti*).
 
-File: `out/glass-riflesso-draft-v1.mp4` (1920×1080, 30 fps, 31,5 s) · provini: `out/contact-sheet-v1.png` ·
-verifica: `out/verify-v1.txt` · sonoro: `out/sfx.wav`.
+File: `out/glass-riflesso-draft-v2.mp4` (1920×1080, 30 fps, 31,5 s, H.264 + AAC) · provini: `out/contact-sheet-v1.png` ·
+verifica: `out/verify-v2.txt` · cartello finale: `out/end-card-original.png`, `out/end-card-mono-study.png` ·
+sonoro: `out/sfx.wav`.
 
 ## 1 · Concetto scelto: RIFLESSO
 
@@ -87,7 +87,8 @@ pulsante), il tocco su **Atmosfera**, lo scroll all'àncora e l'avvio automatico
   originale (1,96–2,20 s e 4,84–5,24 s). Nessun filtro: resta in bianco e nero perché quei fotogrammi non vengono
   mostrati. Il file del sito dura 7,8 s; il film non usa nulla oltre i 7 s, e per questo il pannello 02 attende su
   un suo fotogramma a 1,0 s invece del poster del sito (preso a 7,2 s).
-- Logo BRETÌA: vedi *Limiti*.
+- Logo BRETÌA: il PNG ufficiale con trasparenza (1983×793), conservato intatto come master in `assets/`; il film
+  usa una copia rifilata, senza alcuna modifica di colori o proporzioni.
 
 ## 7 · Firma BRETÌA
 
@@ -96,9 +97,9 @@ scala 0,97) → **POWERED BY** in maiuscolo piccolo, spaziatura 0,34 em, argento
 con una molla morbida senza rimbalzo (scala 0,955 → 1, 14 px di salita) → un'unica lama di luce passa sul logo →
 tenuta ferma fino alla fine. Il contrasto tra il monocromo di GLASS e il blu di BRETÌA è voluto: il cliente e lo studio.
 
-Due trattamenti pronti: **originale** (preferito, `assets/bretia-logo.png`) e **studio monocromatico** con il blu
-originale mantenuto (`?logo=mono`, `assets/bretia-logo-mono.png`), generati senza toccare il master da
-`tools/prepare_logo.py`.
+Due trattamenti a confronto (`out/end-card-original.png`, `out/end-card-mono-study.png`): **originale** e **studio
+monocromatico** con il blu mantenuto. Il logo è già blu, bianco e nero, quindi lo studio cambia solo la freccia lime
+in grigio: la differenza è minima e toglie un dettaglio riconoscibile. **Nel film è usato l'originale.**
 
 ## 8 · Sound design
 
@@ -117,11 +118,33 @@ con un tocco di legno (La5 → Mi6), più brillanti, nella stessa stanza.
 
 ## 9 · Risultati della verifica
 
-[compilato dopo il render]
+`verify_promo.py` sulla bozza v2: **VERDICT PASS**, tutte le prove superate (`out/verify-v2.txt`).
+
+| prova | risultato |
+|---|---|
+| cadenza | lunghezze delle inquadrature da 0,4 a 3,4 s, CV 0,63 (minimo 0,25) |
+| pause | 48,9 % di fotogrammi fermi, pausa più lunga 6,4 s |
+| burst | presente (21,8–22,0 s) |
+| profilo energetico | 0,58 (indicativo, minimo 0,35) |
+| audio | picco −4,5 dBFS, nessun clipping, 22 % di silenzio; −18 LUFS circa |
+| continuità | 1,00 sui 3 confini che il probe considera, tutti *portati* (barra → telefono, crescita del telefono, pagina → marchio del footer). Due confini sono dichiarati in `__meta.cuts`: il passaggio dell'intro a 3,6 s (il marchio arriva al 7,5 % di opacità, sotto la soglia 0,15 del probe, ma per l'occhio è portato) e il cartello finale a 28,1 s. |
+| curve | picco 466 px/fotogramma (lo scatto verso la navigazione), con otturatore reale 180° |
+| inquadratura | puntatore, telefono, video 01, marchio del footer e logo BRETÌA sempre interi nel fotogramma |
+
+Controllo a occhio sul file codificato: nella v1 il motion blur sui testi in movimento rapido si spezzava in copie
+visibili (lo scroll nel telefono, la spinta nel video, la carrellata verso Instagram). Corretto nella v2: `__motion`
+ora misura anche il movimento della pagina dentro il telefono e durante gli scroll, e il render usa campioni a 2,5 px.
 
 ## 10 · Limiti
 
-[compilato dopo il render]
+- **La luce del cursore è sottile**, come nel sito (15 % di champagne al centro). Nel film è leggibile, ma su schermi
+  piccoli o con forte compressione si percepisce appena. Non l'ho intensificata per non alterare il sito.
+- **Gli elementi neri del logo BRETÌA** (contorni, scarabocchi, ©) si fondono con il fondo scuro: il logo resta
+  pienamente riconoscibile (blu, bianco, corona, lime), ma quei dettagli si vedono appena.
+- Il wordmark GLASS è la vettorializzazione potrace usata dal sito, non il vettoriale del designer.
+- Il video 01 parte da 1,0 s (il sito lo fa partire da 0); il pannello 02 attende su un suo fotogramma invece del
+  poster del sito (vedi §6).
+- La bozza è 1080p30. Il 4K60 (`render.py --final`) va renderizzato solo dopo la tua approvazione.
 
 ## 11 · Licenza onetake
 
