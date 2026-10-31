@@ -1,0 +1,13 @@
+
+comp.html — 901 samples at 30 fps, 16 tracked elements (__track)
+continuity  score 1.00  — 1 boundaries: 1 carried, 0 anchored, 0 bare; 1 exempt; hard cuts 0, bursts []
+  t= 21.90  J 0.04  carried   via fmark:                                            before film01:, film02: | after fmark:
+  t= 25.37  J 0.00  declared  via —                                                 before fmark: | after powered:
+curves      peak 359 px/frame (heading: at 9.67 s) · travel on soft curves 63 % · median t80 0.64 · 49 moves
+framing  menu: wholly in frame 8.85–9.5 s — off at 0 of 20 samples
+framing  film01: wholly in frame 12.4–14.9 s — off at 0 of 76 samples
+framing  film02: wholly in frame 17.4–19.2 s — off at 0 of 55 samples
+framing  fmark: wholly in frame 22.6–24.8 s — off at 0 of 67 samples
+framing  bretia: wholly in frame 27.2–30 s — off at 0 of 85 samples
+
+wrote out/probe/tracks.json and out/probe/curves.png

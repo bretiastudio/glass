@@ -10,7 +10,7 @@ is rewritten:
 
 - document selectors (:root, html, body) → the shadow host and a body wrapper;
 - media queries and viewport units are resolved for each viewport (desktop 1920×1080 with a mouse,
-  mobile 390×844 touch), so the mobile mount lays out as a phone inside a 1920×1080 page;
+  mobile 390×844 touch, phone 390×693 touch — exactly 9:16, the vertical film's frame);
 - :hover / :active → .is-hover / .is-active, set by the film from the pointer's position;
 - CSS animations and transitions off: the film computes every state change itself, from the site's own
   durations and curves, so any frame can be sought.
@@ -23,6 +23,7 @@ OUT = Path(__file__).resolve().parent.parent / 'comp' / 'site'
 VIEWPORTS = {
     'desktop': dict(w=1920, h=1080, hover=True),
     'mobile': dict(w=390, h=844, hover=False),
+    'phone': dict(w=390, h=693.333, hover=False),     # a 9:16 phone viewport: the vertical film's frame
 }
 REM = 16
 
