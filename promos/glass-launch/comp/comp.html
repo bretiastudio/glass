@@ -504,7 +504,7 @@ function seek(t) {
   // 06 · the headline, word by word from behind its mask: decisive, damped, readable
   DE.title.style.opacity = t >= T.words ? 1 : 0; DE.title.style.translate = '';
   DE.titleWords.forEach((w, i) => {
-    const t0 = T.words + (i < 3 ? i * 0.085 : 0.34 + (i - 3) * 0.085), r = OM.maskRise(t, t0, 0, { zeta: 0.9, omega: 15 });
+    const t0 = T.words + (i < 3 ? i * 0.07 : 0.28 + (i - 3) * 0.07), r = OM.maskRise(t, t0, 0, { zeta: 0.9, omega: 15 });   // 70 ms: inside the 30–80 ms stagger band
     w.style.transform = r.k >= 0.999 ? 'none' : `translateY(${(105 * r.y).toFixed(2)}%)`;
   });
 
@@ -520,6 +520,9 @@ function seek(t) {
   DE.main.style.opacity = ((1 - kRoom) * (1 - kFoot)).toFixed(4);
   const navOp = tw(t, T.navIn, 0.12, SITE.out) * (1 - tw(t, T.swap[0], T.swap[1] - T.swap[0], SITE.out)) * (t >= 18 ? 0 : 1);
   DE.nav.style.opacity = navOp.toFixed(4); DE.nav.style.translate = '';
+  // the two bars hand over through a 3 px blur, not a bare crossfade
+  const swapBlur = 3 * bell(seg(t, T.swap[0] - 0.05, T.swap[1] + 0.05));
+  DE.nav.style.filter = swapBlur > 0.02 ? `blur(${swapBlur.toFixed(2)}px)` : '';
   DE.fgrid.style.opacity = DE.flegal.style.opacity = (1 - kFoot).toFixed(4);
   DE.footer.style.background = kFoot > 0 ? `linear-gradient(180deg, rgb(8 9 11 / ${(1 - kFoot).toFixed(3)}), rgb(14 16 20 / ${(1 - kFoot).toFixed(3)}))` : '';
   DE.footer.style.borderTopColor = kFoot > 0 ? `rgb(242 240 237 / ${(0.09 * (1 - kFoot)).toFixed(4)})` : '';
@@ -553,7 +556,7 @@ function seek(t) {
   d2.ctrl.style.transform = `scale(${(1 - 0.03 * p02).toFixed(4)})`;
   sheen(d1, t, -1, -1); sheen(d2, t, -1, -1);
   // 06 · the editorial heading rises as the aperture opens on it
-  DE.xpWords.forEach((w, i) => { const r = OM.maskRise(t, T.heading + i * 0.075, 0, { zeta: 0.9, omega: 15 }); w.style.transform = r.k >= 0.999 ? 'none' : `translateY(${(105 * r.y).toFixed(2)}%)`; });
+  DE.xpWords.forEach((w, i) => { const r = OM.maskRise(t, T.heading + i * 0.07, 0, { zeta: 0.9, omega: 15 }); w.style.transform = r.k >= 0.999 ? 'none' : `translateY(${(105 * r.y).toFixed(2)}%)`; });
   // the Instagram invitation: the arrow's hover nudge (160 ms), then a press (opacity .6 while down)
   const kc = transit([[T.ctaHover, T.ctaLeave]], t, 0.16, SITE.out);
   DE.arrow.style.transform = `translate(${(2 * kc).toFixed(3)}px, ${(-2 * kc).toFixed(3)}px)`;
@@ -564,6 +567,7 @@ function seek(t) {
   M.host.style.display = MOB.vis ? 'block' : 'none';
   M.host.style.transform = `matrix(${MOB.s.toFixed(5)},0,0,${MOB.s.toFixed(5)},${MOB.x.toFixed(2)},${MOB.y.toFixed(2)})`;
   M.host.style.opacity = MOB.op.toFixed(4);
+  M.host.style.filter = swapBlur > 0.02 ? `blur(${swapBlur.toFixed(2)}px)` : '';
   const c = MOB.clip;
   M.host.style.clipPath = inset(c, 390, 844);
   const sM = scrollM(t); if (M.body.scrollTop !== sM) M.body.scrollTo({ top: sM, behavior: 'instant' });
