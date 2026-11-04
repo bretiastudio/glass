@@ -1,0 +1,415 @@
+---
+import Wordmark from './Wordmark.astro';
+import { TOUR } from '../config/tour';
+
+const { panorama, stops, start, endYaw } = TOUR;
+
+// Stop marks on the compass ring: 0° is the opening view, clockwise.
+const RING = 15;
+const marks = stops.map((s) => {
+  const a = ((s.yaw - start.yaw) * Math.PI) / 180;
+  return { x: (22 + RING * Math.sin(a)).toFixed(2), y: (22 - RING * Math.cos(a)).toFixed(2) };
+});
+---
+
+<div
+  class="tour"
+  data-tour
+  data-end-yaw={endYaw}
+  data-pano-small={panorama.small}
+  data-pano-large={panorama.large}
+>
+  <div class="tour__view" aria-hidden="true">
+    <picture>
+      <source media="(orientation: landscape)" srcset={panorama.posterLandscape} width="1920" height="1080" />
+      <img
+        class="tour__poster"
+        src={panorama.posterPortrait}
+        alt=""
+        width="900"
+        height="1950"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </picture>
+    <canvas class="tour__canvas" data-tour-canvas></canvas>
+    <div class="tour__veil"></div>
+  </div>
+
+  <div class="tour__compass material" aria-hidden="true" data-tour-compass>
+    <svg viewBox="0 0 44 44">
+      <circle class="tour__ring" cx="22" cy="22" r={RING} />
+      {marks.map((m) => <circle class="tour__mark-dot" cx={m.x} cy={m.y} r="1.25" />)}
+      <g class="tour__needle" data-tour-needle>
+        <path class="tour__cone" d="M22 22 L16.26 8.14 A15 15 0 0 1 27.74 8.14 Z" />
+        <circle class="tour__eye" cx="22" cy="22" r="1.75" />
+      </g>
+    </svg>
+  </div>
+
+  <section class="tour__intro" data-tour-stop data-yaw={start.yaw} data-pitch={start.pitch} aria-labelledby="tour-title">
+    <div class="tour__intro-inner">
+      <p class="label tour__eyebrow">Visita<span class="tour__dot" aria-hidden="true">·</span>Prototipo</p>
+      <h1 id="tour-title" class="tour__wordmark">
+        <Wordmark label="GLASS" /><span class="sr-only"> — visita del locale</span>
+      </h1>
+      <p class="tour__lead">Dove ogni riflesso diventa atmosfera.</p>
+      <p class="tour__cue">
+        <span class="label">Scorri per entrare</span>
+        <span class="tour__cue-line" aria-hidden="true"></span>
+      </p>
+    </div>
+  </section>
+
+  {
+    stops.map((s, i) => (
+      <section
+        class:list={['stop', i % 2 ? 'stop--end' : 'stop--start']}
+        id={s.id}
+        data-tour-stop
+        data-yaw={s.yaw}
+        data-pitch={s.pitch}
+        aria-labelledby={`${s.id}-title`}
+      >
+        <div class="stop__card material" data-tour-focus>
+          <p class="label stop__label">
+            <span class="stop__num">{String(i + 1).padStart(2, '0')}</span>
+            {s.label}
+          </p>
+          <h2 id={`${s.id}-title`} class="stop__title">
+            {s.title}
+          </h2>
+          <p class="stop__text">{s.text}</p>
+          {s.placeholder && <p class="stop__note">Testo segnaposto</p>}
+        </div>
+      </section>
+    ))
+  }
+
+  <p class="tour__credit">
+    {'Prototipo. Il locale nelle immagini è un panorama di prova, non GLASS: '}
+    <a href={panorama.credit.url} target="_blank" rel="noopener">{panorama.credit.name}</a>
+    {`, di ${panorama.credit.author} (${panorama.credit.source}, ${panorama.credit.licence}).`}
+  </p>
+</div>
+
+<script>
+  import { initTour } from '../scripts/tour';
+  initTour();
+</script>
+
+<style>
+  .tour {
+    position: relative;
+  }
+
+  /* --- The room: fixed behind the page ---------------------------------------- */
+
+  .tour__view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    /* The large viewport: the room does not resize while the phone's toolbars move. */
+    height: 100vh;
+    height: 100lvh;
+    overflow: hidden;
+    background: var(--c-ink-0);
+    pointer-events: none;
+  }
+
+  .tour__poster,
+  .tour__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .tour__poster {
+    object-fit: cover;
+  }
+
+  /* One-time handover from the poster to the live room (the same view). */
+  .tour__canvas {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .tour__canvas:global(.is-live) {
+    opacity: 1;
+  }
+
+  .tour__canvas:global(.is-live.is-swapping) {
+    opacity: 0;
+    transition-duration: var(--d-fast);
+  }
+
+  /* Legibility under the navigation, a vignette, and the site's grain. */
+  .tour__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(8 9 11 / 0.6), transparent 24%),
+      radial-gradient(130% 95% at 50% 42%, transparent 50%, rgb(8 9 11 / 0.65));
+  }
+
+  .tour__veil::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/brand/grain.webp') 0 0 / 160px 160px;
+  }
+
+  /* --- Compass: where the camera looks, and where the stops are ---------------- */
+
+  .tour__compass {
+    position: fixed;
+    right: var(--gutter-r);
+    bottom: max(var(--s-4), env(safe-area-inset-bottom));
+    z-index: 30;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity var(--d-ui) var(--ease-out);
+  }
+
+  .tour__compass:global(.is-away) {
+    opacity: 0;
+  }
+
+  .tour__compass svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .tour__ring {
+    fill: none;
+    stroke: var(--c-line-strong);
+    stroke-width: 1;
+  }
+
+  .tour__mark-dot {
+    fill: var(--c-silver-dim);
+  }
+
+  .tour__needle {
+    transform-box: view-box;
+    transform-origin: 22px 22px;
+  }
+
+  .tour__cone {
+    fill: rgb(242 240 237 / 0.16);
+    stroke: rgb(242 240 237 / 0.5);
+    stroke-width: 0.75;
+  }
+
+  .tour__eye {
+    fill: var(--c-white);
+  }
+
+  /* --- Opening view ----------------------------------------------------------------- */
+
+  .tour__intro {
+    display: grid;
+    align-items: end;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-inline: var(--gutter-l) var(--gutter-r);
+    padding-bottom: calc(var(--s-8) + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent 40%, rgb(8 9 11 / 0.55));
+  }
+
+  .tour__intro-inner {
+    display: grid;
+    gap: var(--s-4);
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+  }
+
+  .tour__eyebrow {
+    color: var(--c-silver);
+  }
+
+  .tour__dot {
+    margin-inline: 0.6em;
+  }
+
+  .tour__wordmark {
+    width: min(100%, 34rem);
+    color: var(--c-white);
+  }
+
+  .tour__lead {
+    font-size: var(--fs-lead);
+    font-weight: 320;
+    color: var(--c-silver);
+  }
+
+  .tour__cue {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin-top: var(--s-4);
+    color: var(--c-silver-dim);
+  }
+
+  .tour__cue .label {
+    color: inherit;
+  }
+
+  .tour__cue-line {
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, currentColor, transparent);
+  }
+
+  /* --- Stops ------------------------------------------------------------------------- */
+
+  .stop {
+    display: grid;
+    align-items: center;
+    /* The distance between two stops is the distance the room takes to turn. */
+    min-height: 140vh;
+    min-height: 140svh;
+    padding-inline: var(--gutter-l) var(--gutter-r);
+  }
+
+  .stop__card {
+    display: grid;
+    gap: var(--s-3);
+    width: min(100%, 26rem);
+    padding: var(--s-5);
+    border-radius: var(--r-l);
+  }
+
+  .stop__label {
+    display: flex;
+    gap: var(--s-3);
+    color: var(--c-silver-dim);
+  }
+
+  .stop__num {
+    color: var(--c-silver);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stop__title {
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: var(--track-display);
+    text-wrap: balance;
+  }
+
+  .stop__text {
+    font-size: var(--fs-lead);
+    font-weight: 320;
+    line-height: 1.55;
+    color: var(--c-silver);
+    text-wrap: pretty;
+  }
+
+  .stop__note {
+    justify-self: start;
+    margin-top: var(--s-1);
+    padding: var(--s-1) var(--s-2);
+    border: 1px dashed var(--c-line-strong);
+    border-radius: var(--r-s);
+    font-size: var(--fs-label);
+    font-weight: 460;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--c-champagne);
+  }
+
+  /* Cards fade in as they rise and out under the navigation: tied to scroll, not time. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .stop__card {
+        animation: stop-card linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+      }
+    }
+  }
+
+  @keyframes stop-card {
+    0% {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+    30%,
+    58% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-1.5rem);
+    }
+  }
+
+  /* --- Credit ---------------------------------------------------------------------- */
+
+  .tour__credit {
+    max-width: calc(var(--container) + var(--gutter-l) + var(--gutter-r));
+    margin-inline: auto;
+    padding: var(--s-8) var(--gutter-r) var(--s-6) var(--gutter-l);
+    font-size: var(--fs-small);
+    color: var(--c-silver-dim);
+    text-wrap: pretty;
+  }
+
+  .tour__credit a {
+    color: var(--c-silver);
+    text-decoration: underline;
+    text-decoration-color: var(--c-line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  /* --- Tuning readout (?hud) ----------------------------------------------------------- */
+
+  :global(.tour__hud) {
+    position: fixed;
+    left: var(--gutter-l);
+    bottom: max(var(--s-4), env(safe-area-inset-bottom));
+    z-index: 30;
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-s);
+    background: rgb(8 9 11 / 0.8);
+    font-size: var(--fs-small);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-white);
+  }
+
+  /* --- Wide screens: cards alternate sides, the room stays in the middle ------------- */
+
+  @media (min-width: 900px) {
+    .stop {
+      max-width: calc(var(--container) + var(--gutter-l) + var(--gutter-r));
+      margin-inline: auto;
+    }
+
+    .stop--end .stop__card {
+      justify-self: end;
+    }
+
+    .stop__card {
+      padding: var(--s-6);
+    }
+
+    .tour__compass {
+      bottom: max(var(--s-6), env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tour__canvas {
+      transition-duration: var(--d-ui);
+    }
+  }
+</style>

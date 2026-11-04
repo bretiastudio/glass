@@ -53,6 +53,33 @@ ffmpeg -i ORIGINALE_01.mp4 -t 17.000 -an -map_metadata -1 -vf "scale=720:1280:fl
 ffmpeg -i ORIGINALE_02.mp4 -t 7.800 -an -map_metadata -1 -vf "scale=720:1280:flags=lanczos,format=yuv420p" -c:v libx264 -profile:v high -level 4.0 -preset veryslow -crf 24 -g 50 -movflags +faststart public/media/glass-experience-02.mp4
 ```
 
+## Visita a 360° (prototipo)
+
+`/visita` è una pagina a parte (`noindex`): un panorama a 360° fisso dietro la pagina, che gira mentre si
+scorre e si ferma a ogni sezione. Lo scroll resta quello nativo del browser. Il panorama è disegnato in WebGL
+senza librerie (`src/scripts/tour.ts`).
+
+**Il panorama di oggi non è GLASS**: è [Cowboy Town Saloon](https://polyhaven.com/a/cowboy_town_saloon)
+di Poly Haven (CC0), usato solo per provare l'effetto. Anche i testi delle tappe sono segnaposto e indicano
+cosa scriverci.
+
+| Percorso | Contenuto |
+| --- | --- |
+| `src/config/tour.ts` | Tappe: testi e direzione della camera (`yaw`, `pitch`) per ognuna. |
+| `src/components/Tour.astro` | Pagina della visita: panorama, bussola, schede delle tappe. |
+| `src/scripts/tour.ts` | Shader, scroll → rotazione, versione «riduci movimento». |
+| `tools/tour/prepare_pano.py` | Prepara un panorama nuovo (formati e immagini di attesa). |
+| `public/tour/` | Panorama in due misure e le due immagini di attesa. |
+
+Con la foto vera del locale (un'immagine equirettangolare 2:1, quella di qualunque fotocamera 360°):
+
+```bash
+python3 -I tools/tour/prepare_pano.py percorso/della/foto.jpg --yaw -150
+```
+
+Poi si regolano le direzioni delle tappe in `src/config/tour.ts`: `/visita?hud` mostra in basso a sinistra
+la direzione attuale mentre si scorre. `/visita?colore` mostra il panorama a colori invece che in bianco e nero.
+
 ## Da completare
 
 Vedi i `TODO(owner)` in `src/config/site.ts` e i campi tra parentesi quadre nelle pagine legali.

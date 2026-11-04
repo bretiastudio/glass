@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Tour from '../components/Tour.astro';
+import { SITE } from '../config/site';
+---
+
+<BaseLayout
+  title={`Visita — ${SITE.name} (prototipo)`}
+  description={`Prototipo: una visita di ${SITE.name} in cui lo scroll fa girare la sala.`}
+  noindex
+>
+  <Tour />
+</BaseLayout>
