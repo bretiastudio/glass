@@ -1,0 +1,18 @@
+
+glass-riflesso-vertical-draft.mp4 — energy map:
+  0.0s |                                         .......|
+  4.0s |. .                                             |
+  8.0s |       .            :.:-+*+-- @.. .   ::==#%@@@+|
+ 12.0s |*=+:.@......:.:.:...:.:.:%. .   ...   ..::-::.. |
+ 16.0s |     =+=+=+=* @@##@#....  . .=.         -+*++-:.|
+ 20.0s |               .::::-::.....                    |
+ 24.0s |                                                |
+ 28.0s |                        |
+
+  PASS  cadence    shot lengths [0.5, 2.45, 0.35, 1.1, 4.05, 1.2, 0.8, 0.55, 1.3, 2.7, 1.1, 0.3, 1.1, 1.85, 1.05, 0.55, 1.6, 2.25, 0.85, 0.35, 4.0, 0.0]  CV 0.80 (need >= 0.25)
+  PASS  rest       still 0.464  longest quiet 4.25 s
+  PASS  burst      bursts [(9.92, 11.33), (11.33, 12.42), (15.5, 16.92), (17.0, 18.42), (19.33, 19.83), (21.5, 21.75)]
+  PASS  not-flat   row-profile variation 1.01 (advisory, >= 0.35)
+  PASS  audio      peak -4.5 dBFS  clipped 0  quiet 0.297
+
+VERDICT: PASS
