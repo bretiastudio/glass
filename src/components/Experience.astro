@@ -1,0 +1,385 @@
+---
+import { SITE } from '../config/site';
+
+const films = [
+  {
+    id: 'film-01',
+    src: '/media/glass-experience-01.mp4',
+    poster: '/media/glass-experience-01-poster.webp',
+    label: 'Video in bianco e nero: un barman di GLASS prepara un cocktail, tra shaker, ghiaccio e cristallo.',
+    duration: '0:17',
+    variant: 'a',
+  },
+  {
+    id: 'film-02',
+    src: '/media/glass-experience-02.mp4',
+    poster: '/media/glass-experience-02-poster.webp',
+    label: 'Video in bianco e nero: cocktail mescolati e serviti al bancone di GLASS, fino a un martini accanto a una candela.',
+    duration: '0:08',
+    variant: 'b',
+  },
+];
+---
+
+<section class="xp" id="atmosfera" aria-labelledby="xp-title">
+  <div class="container xp__grid">
+    <header class="xp__head">
+      <p class="label xp__eyebrow">Atmosfera</p>
+      <h2 id="xp-title" class="xp__title">Uno sguardo dentro GLASS.</h2>
+      <p class="xp__lead">Scopri GLASS, anche fuori dal locale.</p>
+    </header>
+
+    {
+      films.map((f, i) => (
+        <figure class:list={['film', `film--${f.variant}`]} data-film data-state="idle">
+          <div class="film__frame">
+            <video
+              class="film__video"
+              src={f.src}
+              poster={f.poster}
+              width="720"
+              height="1280"
+              muted
+              playsinline
+              preload="none"
+              controls
+              disablepictureinpicture
+              aria-label={f.label}
+              data-film-video
+            />
+            <img
+              class="film__poster"
+              src={f.poster}
+              alt=""
+              width="720"
+              height="1280"
+              loading="lazy"
+              decoding="async"
+              data-film-poster
+            />
+            <button class="film__control material" type="button" aria-label="Riproduci il video" hidden data-film-control>
+              <svg class="film__icon film__icon--play" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M7 5.5v9l7.5-4.5z" />
+              </svg>
+              <svg class="film__icon film__icon--pause" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M7.5 5.5v9M12.5 5.5v9" />
+              </svg>
+              <svg class="film__icon film__icon--replay" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M5.2 8.2A5.5 5.5 0 1 1 4.6 12" />
+                <path d="M4.6 4.6v3.8h3.8" />
+              </svg>
+            </button>
+          </div>
+          <figcaption class="film__caption">
+            <span class="label">{String(i + 1).padStart(2, '0')}</span>
+            <span class="film__duration">{f.duration}</span>
+          </figcaption>
+        </figure>
+      ))
+    }
+
+    <div class="xp__cta">
+      <a class="cta" href={SITE.instagram.url} target="_blank" rel="noopener">
+        <span class="label cta__label">Seguici su Instagram</span>
+        <span class="cta__handle">
+          @{SITE.instagram.handle}
+          <svg class="cta__arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" /></svg>
+        </span>
+        <span class="sr-only">(si apre in una nuova scheda)</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initFilms } from '../scripts/films';
+  initFilms();
+</script>
+
+<style>
+  .xp {
+    position: relative;
+    padding-block: var(--section-pad);
+    background: radial-gradient(70% 45% at 70% 45%, var(--c-ink-1), transparent 75%), var(--c-ink-0);
+  }
+
+  .xp__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--s-4);
+    row-gap: var(--s-6);
+  }
+
+  .xp__head {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  .xp__eyebrow {
+    color: var(--c-silver-dim);
+  }
+
+  .xp__title {
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: var(--track-display);
+    text-wrap: balance;
+  }
+
+  .xp__lead {
+    max-width: 30ch;
+    text-wrap: pretty;
+    font-size: var(--fs-lead);
+    font-weight: 320;
+    color: var(--c-silver);
+  }
+
+  /* --- Films: editorial, offset — never a card grid ------------------------ */
+
+  .film {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .film--a {
+    grid-column: 1 / span 10;
+  }
+
+  .film--b {
+    grid-column: 4 / -1;
+  }
+
+  .film__frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    border-radius: var(--r-m);
+    overflow: hidden;
+    background: var(--c-ink-2);
+    isolation: isolate;
+  }
+
+  /* Hairline edge + a low vignette so the control stays legible on bright frames */
+  .film__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--glass-edge);
+    background: linear-gradient(180deg, transparent 72%, rgb(8 9 11 / 0.45));
+    pointer-events: none;
+  }
+
+  .film__video,
+  .film__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .film__poster {
+    z-index: 1;
+    opacity: 0;
+    /* Replay is a response to the viewer: clear the poster quickly. */
+    transition: opacity var(--d-ui) var(--ease-out);
+    pointer-events: none;
+  }
+
+  /* A film finishing on its own settles back to its poster slowly. */
+  .film[data-state='ended'] .film__poster {
+    opacity: 1;
+    transition-duration: 500ms;
+  }
+
+  .film__control {
+    position: absolute;
+    right: var(--s-3);
+    bottom: var(--s-3);
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-m);
+    color: var(--c-white);
+    transition: transform var(--d-press) var(--ease-out), opacity var(--d-ui) var(--ease-out);
+  }
+
+  .film__control[hidden] {
+    display: none;
+  }
+
+  .film__control:active {
+    transform: scale(0.97);
+  }
+
+  .film__icon {
+    grid-area: 1 / 1;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(2px);
+    transition:
+      opacity var(--d-fast) var(--ease-out),
+      transform var(--d-fast) var(--ease-out),
+      filter var(--d-fast) var(--ease-out);
+  }
+
+  .film__icon--play {
+    fill: currentColor;
+    stroke-width: 1;
+  }
+
+  .film[data-state='idle'] .film__icon--play,
+  .film[data-state='paused'] .film__icon--play,
+  .film[data-state='playing'] .film__icon--pause,
+  .film[data-state='ended'] .film__icon--replay {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* While playing, the control recedes until the viewer reaches for it. */
+  .film[data-state='playing'] .film__control {
+    opacity: 0.55;
+  }
+
+  .film[data-state='playing'] .film__control:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .film[data-state='playing']:hover .film__control {
+      opacity: 1;
+    }
+  }
+
+  .film__caption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    color: var(--c-silver-dim);
+  }
+
+  .film__duration {
+    font-size: var(--fs-small);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+
+  /* --- Instagram invitation -------------------------------------------------- */
+
+  .xp__cta {
+    grid-column: 1 / -1;
+    margin-top: var(--s-4);
+  }
+
+  .cta {
+    display: inline-grid;
+    gap: var(--s-2);
+    min-height: 44px;
+    padding-block: var(--s-2);
+  }
+
+  .cta__label {
+    color: var(--c-silver-dim);
+  }
+
+  .cta__handle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--fs-lead);
+    font-weight: 340;
+    letter-spacing: 0.01em;
+    color: var(--c-white);
+    padding-bottom: var(--s-1);
+    background: linear-gradient(90deg, var(--c-line-strong), var(--c-line-strong)) 0 100% / 100% 1px no-repeat;
+  }
+
+  .cta__arrow {
+    width: 0.7em;
+    height: 0.7em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    transition: transform var(--d-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cta:hover .cta__arrow {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .film__icon {
+      transform: none;
+      filter: none;
+    }
+
+    .cta__arrow {
+      transition: none;
+    }
+  }
+
+  /* --- Tablet: side by side, B offset down -------------------------------- */
+
+  @media (min-width: 600px) {
+    .film--a {
+      grid-column: 1 / span 6;
+    }
+
+    .film--b {
+      grid-column: 7 / -1;
+      margin-top: 18%;
+    }
+  }
+
+  /* --- Desktop: copy column + two staggered panels ----------------------- */
+
+  @media (min-width: 900px) {
+    .xp__grid {
+      column-gap: var(--s-5);
+      row-gap: 0;
+      align-items: start;
+    }
+
+    .xp__head {
+      grid-column: 1 / span 4;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--nav-top) + var(--nav-h) + var(--s-7));
+      padding-top: var(--s-6);
+    }
+
+    .film--a {
+      grid-column: 6 / span 4;
+      grid-row: 1 / span 2;
+    }
+
+    .film--b {
+      grid-column: 10 / span 3;
+      grid-row: 1 / span 2;
+      margin-top: 32%;
+    }
+
+    .xp__cta {
+      grid-column: 1 / span 4;
+      grid-row: 2;
+      align-self: end;
+      margin-top: 0;
+    }
+  }
+</style>

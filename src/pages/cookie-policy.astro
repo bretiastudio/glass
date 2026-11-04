@@ -1,0 +1,63 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+import { SITE } from '../config/site';
+---
+
+<LegalLayout title="Cookie policy" updated="[data di pubblicazione]">
+  <p>
+    Questa pagina spiega quali cookie e tecnologie simili utilizza il sito di {SITE.name}, ai sensi dell'art. 122
+    del D.lgs. 196/2003 e delle Linee guida del Garante per la protezione dei dati personali sui cookie e altri
+    strumenti di tracciamento (provvedimento del 10 giugno 2021).
+  </p>
+
+  <h2>In breve</h2>
+  <p>
+    Il sito <strong>non utilizza cookie</strong>: né tecnici, né di statistica, né di profilazione, né di terze
+    parti. Per questo motivo non viene mostrato alcun banner per il consenso.
+  </p>
+
+  <h2>Memorizzazione locale nel browser</h2>
+  <p>
+    Per non ripetere l'animazione di apertura a ogni pagina visitata, il sito salva nel browser un'unica
+    informazione tecnica tramite <em>sessionStorage</em>:
+  </p>
+  <ul>
+    <li><strong>Nome:</strong> <code>glass:intro</code></li>
+    <li><strong>Contenuto:</strong> il valore «1» (animazione già vista); nessun dato personale</li>
+    <li><strong>Durata:</strong> viene cancellata automaticamente alla chiusura della scheda o della finestra</li>
+    <li><strong>Destinatari:</strong> nessuno; l'informazione resta nel tuo dispositivo e non viene mai inviata a un server</li>
+  </ul>
+  <p>
+    Si tratta di uno strumento tecnico strettamente legato alla funzione del sito, che non richiede consenso.
+    <span class="ph">[Da confermare con il consulente.]</span>
+  </p>
+
+  <h2>Contenuti di terze parti</h2>
+  <p>
+    Il sito non incorpora video, mappe, pulsanti «mi piace» o altri contenuti di servizi esterni. I collegamenti
+    a Instagram sono semplici link: Instagram può impostare cookie solo dopo che hai lasciato il sito cliccando
+    il collegamento, secondo la propria
+    <a href="https://privacycenter.instagram.com/policies/cookies/" target="_blank" rel="noopener">cookie policy</a>.
+  </p>
+
+  <h2>Come gestire cookie e dati del browser</h2>
+  <p>
+    Puoi cancellare in qualsiasi momento i dati memorizzati dai siti web dalle impostazioni del tuo browser
+    (Chrome, Safari, Firefox, Edge). Cancellarli non compromette l'uso di questo sito: l'animazione di apertura
+    verrà semplicemente mostrata di nuovo.
+  </p>
+
+  <h2>Aggiornamenti</h2>
+  <p>
+    Se in futuro il sito introdurrà strumenti che richiedono il consenso (ad esempio statistiche di visita),
+    questa pagina verrà aggiornata e sarà mostrato un banner per raccogliere le tue preferenze prima di qualsiasi
+    installazione.
+  </p>
+
+  <h2>Titolare del trattamento</h2>
+  <p>
+    <span class="ph">[Ragione sociale]</span>, <span class="ph">[indirizzo]</span>, P. IVA
+    <span class="ph">[numero]</span>, <span class="ph">[email]</span>. Per maggiori informazioni consulta la
+    <a href="/privacy-policy">privacy policy</a>.
+  </p>
+</LegalLayout>

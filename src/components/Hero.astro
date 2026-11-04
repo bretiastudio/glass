@@ -1,0 +1,237 @@
+---
+import Wordmark from './Wordmark.astro';
+import { SITE } from '../config/site';
+---
+
+<section class="hero" id="top" aria-labelledby="hero-title" data-hero>
+  <div class="hero__backdrop" aria-hidden="true">
+    <div class="hero__light" data-light></div>
+  </div>
+
+  <!-- The intro wordmark lands exactly here and becomes this element. -->
+  <div class="hero__mark" data-hero-mark aria-hidden="true">
+    <Wordmark />
+  </div>
+
+  <div class="hero__content container">
+    <p class="label hero__eyebrow" data-intro-reveal="1">
+      {SITE.tagline}<span class="hero__dot" aria-hidden="true">·</span><span class="sr-only"> a </span>{SITE.city}
+    </p>
+    <h1 id="hero-title" class="hero__title" data-intro-reveal="2">
+      <span class="sr-only">{SITE.name}. </span>
+      <span class="hero__line">Dove ogni riflesso</span>
+      <span class="hero__line">diventa atmosfera.</span>
+    </h1>
+    <a class="hero__cue" href="#atmosfera" data-intro-reveal="3">
+      <span class="label">Scopri</span>
+      <span class="hero__cue-line" aria-hidden="true"></span>
+    </a>
+  </div>
+</section>
+
+<script>
+  import { initLight } from '../scripts/light';
+  initLight();
+</script>
+
+<style>
+  .hero {
+    /* One measure for the wordmark and the copy, so the headline sits under the G. */
+    --hero-w: min(100vw - var(--gutter-l) - var(--gutter-r), 100rem);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: end;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: clip;
+  }
+
+  /* --- Satin backdrop: graphite depth, a soft silver reflection, grain ------ */
+
+  .hero__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      /* soft silver reflection, like light on a frosted pane */
+      radial-gradient(60% 38% at 22% 18%, rgb(197 198 201 / 0.07), transparent 70%),
+      /* graphite depth under the wordmark */
+      radial-gradient(90% 55% at 50% 42%, var(--c-ink-2), transparent 75%),
+      /* fade into the page below so the section boundary disappears */
+      linear-gradient(180deg, transparent 70%, var(--c-ink-0)),
+      var(--c-ink-0);
+  }
+
+  .hero__backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/brand/grain.webp') 0 0 / 160px 160px;
+    opacity: 1;
+  }
+
+  /*
+   * The light. On touch screens it is a static warm glow; on fine pointers
+   * scripts/light.ts moves it with a critically damped spring (transform only).
+   */
+  .hero__light {
+    --size: max(70vmax, 40rem);
+    position: absolute;
+    left: 72%;
+    top: 30%;
+    width: var(--size);
+    height: var(--size);
+    margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgb(184 166 140 / 0.15),
+      rgb(184 166 140 / 0.07) 40%,
+      rgb(184 166 140 / 0.02) 70%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  :global(.light-live) .hero__light {
+    left: 0;
+    top: 0;
+    will-change: transform;
+  }
+
+  /* --- Wordmark as architecture ------------------------------------------ */
+
+  .hero__mark {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: var(--hero-w);
+    transform: translate(-50%, -50%);
+    --mark-opacity: 0.075;
+    color: var(--c-white);
+    opacity: var(--mark-opacity);
+    pointer-events: none;
+  }
+
+  /* --- Copy --------------------------------------------------------------- */
+
+  .hero__content {
+    position: relative;
+    max-width: var(--hero-w);
+    padding-inline: 0;
+    display: grid;
+    gap: var(--s-4);
+    padding-top: calc(var(--nav-top) + var(--nav-h) + var(--s-6));
+    padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom));
+  }
+
+  .hero__eyebrow {
+    color: var(--c-silver-dim);
+  }
+
+  .hero__dot {
+    margin-inline: 0.6em;
+  }
+
+  .hero__title {
+    font-size: var(--fs-display);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: var(--track-display);
+    color: var(--c-white);
+  }
+
+  .hero__line {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .hero__cue {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    justify-self: start;
+    min-height: 44px;
+    margin-top: var(--s-5);
+    color: var(--c-silver-dim);
+    transition: color var(--d-fast) ease;
+  }
+
+  .hero__cue-line {
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, currentColor, transparent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hero__cue:hover {
+      color: var(--c-white);
+    }
+  }
+
+  /* Short landscape phones: shrink the mark and give the copy room. */
+  @media (orientation: landscape) and (max-height: 32rem) {
+    .hero {
+      min-height: max(100svh, 26rem);
+    }
+
+    .hero__mark {
+      width: 58vw;
+      top: 36%;
+      /* left edge on the copy's edge (the mark is centred with translate -50%) */
+      left: calc((100vw - var(--hero-w)) / 2 + 29vw);
+    }
+
+    .hero__content {
+      gap: var(--s-2);
+    }
+
+    .hero__title {
+      font-size: clamp(1.5rem, 4.2vh + 0.5rem, 2.25rem);
+    }
+
+    .hero__cue {
+      margin-top: var(--s-2);
+    }
+  }
+
+  @media (min-width: 600px) and (orientation: portrait) {
+    .hero__mark {
+      top: 38%;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .hero__mark {
+      top: 41%;
+    }
+
+    .hero__content {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      column-gap: var(--s-7);
+      padding-bottom: calc(var(--s-8) + env(safe-area-inset-bottom));
+    }
+
+    .hero__eyebrow,
+    .hero__title {
+      grid-column: 1;
+    }
+
+    .hero__cue {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: end;
+      margin-top: 0;
+      flex-direction: column-reverse;
+      gap: var(--s-4);
+    }
+
+    .hero__cue-line {
+      width: 1px;
+      height: 3.5rem;
+      background: linear-gradient(0deg, currentColor, transparent);
+    }
+  }
+</style>

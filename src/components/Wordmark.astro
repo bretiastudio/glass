@@ -1,0 +1,55 @@
+---
+/**
+ * The GLASS wordmark, built from the traced original logo (never set in a font).
+ * Each letter is its own element so the intro can reveal them individually;
+ * positions come straight from the source artwork, so spacing is untouched.
+ */
+import { LETTERS, WORDMARK } from '../assets/brand/wordmark';
+
+interface Props {
+  class?: string;
+  /** Accessible name. Omit for decorative instances. */
+  label?: string;
+}
+
+const { class: className, label } = Astro.props;
+const pct = (n: number, of: number) => `${((n / of) * 100).toFixed(4)}%`;
+---
+
+<span
+  class:list={['wordmark', className]}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+>
+  {
+    LETTERS.map((l, i) => (
+      <svg
+        class="wordmark__letter"
+        data-letter={i}
+        style={`left:${pct(l.x, WORDMARK.width)};top:${pct(l.y, WORDMARK.height)};width:${pct(l.w, WORDMARK.width)};height:${pct(l.h, WORDMARK.height)}`}
+        viewBox={l.viewBox}
+        aria-hidden="true"
+        focusable="false"
+      >
+        <use href={`#glass-letter-${i}`} />
+      </svg>
+    ))
+  }
+</span>
+
+<style>
+  .wordmark {
+    position: relative;
+    display: block;
+    aspect-ratio: 744 / 136;
+    color: currentColor;
+    fill: currentColor;
+  }
+
+  .wordmark__letter {
+    position: absolute;
+    max-width: none;
+    overflow: visible;
+  }
+</style>
