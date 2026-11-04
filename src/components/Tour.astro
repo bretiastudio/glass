@@ -1,21 +1,22 @@
 ---
 import Wordmark from './Wordmark.astro';
-import { TOUR } from '../config/tour';
+import { TOUR, POINT_NAMES } from '../config/tour';
 
-const { panorama, stops, start, endYaw } = TOUR;
+const { panorama, stops, start, north } = TOUR;
 
-// Stop marks on the compass ring: 0° is the opening view, clockwise.
-const RING = 15;
-const marks = stops.map((s) => {
-  const a = ((s.yaw - start.yaw) * Math.PI) / 180;
-  return { x: (22 + RING * Math.sin(a)).toFixed(2), y: (22 - RING * Math.cos(a)).toFixed(2) };
-});
+// Compass rose: letters fixed at the cardinal points, the cone turns with the camera.
+const LETTERS = [
+  { point: 'N', x: 26, y: 12.4 },
+  { point: 'E', x: 39.6, y: 26 },
+  { point: 'S', x: 26, y: 39.6 },
+  { point: 'O', x: 12.4, y: 26 },
+] as const;
 ---
 
 <div
   class="tour"
   data-tour
-  data-end-yaw={endYaw}
+  data-north={north}
   data-pano-small={panorama.small}
   data-pano-large={panorama.large}
 >
@@ -36,18 +37,32 @@ const marks = stops.map((s) => {
     <div class="tour__veil"></div>
   </div>
 
-  <div class="tour__compass material" aria-hidden="true" data-tour-compass>
-    <svg viewBox="0 0 44 44">
-      <circle class="tour__ring" cx="22" cy="22" r={RING} />
-      {marks.map((m) => <circle class="tour__mark-dot" cx={m.x} cy={m.y} r="1.25" />)}
+  <div class="tour__compass material" aria-hidden="true" data-tour-compass data-active={start.point}>
+    <svg viewBox="0 0 52 52">
+      <circle class="tour__ring" cx="26" cy="26" r="21" />
       <g class="tour__needle" data-tour-needle>
-        <path class="tour__cone" d="M22 22 L16.26 8.14 A15 15 0 0 1 27.74 8.14 Z" />
-        <circle class="tour__eye" cx="22" cy="22" r="1.75" />
+        <path class="tour__cone" d="M26 26 L18.82 6.27 A21 21 0 0 1 33.18 6.27 Z" />
       </g>
+      {
+        LETTERS.map((l) => (
+          <text class="tour__letter" data-point={l.point} x={l.x} y={l.y}>
+            {l.point}
+          </text>
+        ))
+      }
+      <circle class="tour__eye" cx="26" cy="26" r="1.5" />
     </svg>
   </div>
 
-  <section class="tour__intro" data-tour-stop data-yaw={start.yaw} data-pitch={start.pitch} aria-labelledby="tour-title">
+  <section
+    class="tour__intro"
+    data-tour-stop
+    data-point={start.point}
+    data-bearing={start.bearing}
+    data-pitch={start.pitch}
+    data-zoom={start.zoom}
+    aria-labelledby="tour-title"
+  >
     <div class="tour__intro-inner">
       <p class="label tour__eyebrow">Visita<span class="tour__dot" aria-hidden="true">·</span>Prototipo</p>
       <h1 id="tour-title" class="tour__wordmark">
@@ -67,13 +82,15 @@ const marks = stops.map((s) => {
         class:list={['stop', i % 2 ? 'stop--end' : 'stop--start']}
         id={s.id}
         data-tour-stop
-        data-yaw={s.yaw}
+        data-point={s.point}
+        data-bearing={s.bearing}
         data-pitch={s.pitch}
+        data-zoom={s.zoom}
         aria-labelledby={`${s.id}-title`}
       >
         <div class="stop__card material" data-tour-focus>
           <p class="label stop__label">
-            <span class="stop__num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="stop__point">{POINT_NAMES[s.point]}</span>
             {s.label}
           </p>
           <h2 id={`${s.id}-title`} class="stop__title">
@@ -169,8 +186,8 @@ const marks = stops.map((s) => {
     right: var(--gutter-r);
     bottom: max(var(--s-4), env(safe-area-inset-bottom));
     z-index: 30;
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     pointer-events: none;
     transition: opacity var(--d-ui) var(--ease-out);
@@ -191,13 +208,26 @@ const marks = stops.map((s) => {
     stroke-width: 1;
   }
 
-  .tour__mark-dot {
-    fill: var(--c-silver-dim);
-  }
-
   .tour__needle {
     transform-box: view-box;
-    transform-origin: 22px 22px;
+    transform-origin: 26px 26px;
+  }
+
+  .tour__letter {
+    font-family: var(--font);
+    font-size: 6.5px;
+    font-weight: 460;
+    text-anchor: middle;
+    dominant-baseline: central;
+    fill: var(--c-silver-dim);
+    transition: fill var(--d-ui) ease;
+  }
+
+  .tour__compass:global([data-active='N']) .tour__letter[data-point='N'],
+  .tour__compass:global([data-active='E']) .tour__letter[data-point='E'],
+  .tour__compass:global([data-active='S']) .tour__letter[data-point='S'],
+  .tour__compass:global([data-active='O']) .tour__letter[data-point='O'] {
+    fill: var(--c-white);
   }
 
   .tour__cone {
@@ -272,9 +302,9 @@ const marks = stops.map((s) => {
   .stop {
     display: grid;
     align-items: center;
-    /* The distance between two stops is the distance the room takes to turn. */
-    min-height: 140vh;
-    min-height: 140svh;
+    /* Between two checkpoints there is a moment with no card on screen: the room turns then. */
+    min-height: 120vh;
+    min-height: 120svh;
     padding-inline: var(--gutter-l) var(--gutter-r);
   }
 
@@ -292,9 +322,8 @@ const marks = stops.map((s) => {
     color: var(--c-silver-dim);
   }
 
-  .stop__num {
+  .stop__point {
     color: var(--c-silver);
-    font-variant-numeric: tabular-nums;
   }
 
   .stop__title {

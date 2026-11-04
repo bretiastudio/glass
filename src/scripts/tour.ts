@@ -1,25 +1,24 @@
 /**
- * Scroll-driven 360° tour (/visita).
+ * 360° tour with checkpoints (/visita).
  *
- * One equirectangular panorama drawn by a single WebGL fragment shader. Scrolling
- * never gets hijacked: the page scrolls natively and the camera follows it.
+ * One equirectangular panorama drawn by a single WebGL fragment shader behind the
+ * page. Scrolling stays native; it only decides which checkpoint is active.
  *
- * - Each stop (`[data-tour-stop]`) has a heading. The camera holds still while a
- *   stop's card sits on the anchor line, then turns to the next heading with an
- *   ease-in-out between holds, so the room "stops" at each section by itself.
- * - The scroll position the camera follows goes through a critically damped
- *   spring (no overshoot), which smooths mouse-wheel steps; touch momentum is
- *   already smooth and passes through almost unchanged.
- * - The loop runs only while the camera is moving. Positions are measured on
- *   resize only; a frame reads `scrollY` and nothing else from layout.
- * - Reduced motion: the camera never turns. The view changes only from one stop
- *   to the next, with a short crossfade.
+ * - Each checkpoint (`[data-tour-stop]`) faces a point of interest. The camera stays
+ *   still on it. Halfway to the next checkpoint (while no card is on screen) the
+ *   camera turns to the next one in a single quick move: a critically damped spring,
+ *   so it leaves at once, never overshoots, and turns back smoothly if the visitor
+ *   scrolls back mid-move. A small hysteresis stops it flickering at the threshold.
+ * - Fast turns get motion blur along the turn (a box filter over a 1/60 s shutter)
+ *   and a slight widening of the view, so the move reads as a whip pan, not a jump.
+ * - The loop runs only while the camera moves. Positions are measured on resize;
+ *   a scroll event reads `scrollY` and nothing else from layout.
+ * - Reduced motion: no turns. The view changes at each checkpoint with a crossfade.
  * - No WebGL, no JavaScript, or a lost context: the poster stays, which is the
- *   first stop's view rendered by tools/tour/prepare_pano.py.
+ *   opening view rendered by tools/tour/prepare_pano.py.
  *
  * GRADE, FOV and the projection must match tools/tour/prepare_pano.py.
- *
- * URL flags for tuning: `?hud` shows the current heading, `?colore` skips the
+ * URL flags for tuning: `?hud` shows the current direction, `?colore` skips the
  * black-and-white grade.
  */
 const GRADE_GAIN = 0.78;
@@ -29,18 +28,21 @@ const FOV_V_MIN = 60;
 const FOV_V_MAX = 80;
 const PORTRAIT_SHIFT = 0.2; // lens shift on tall screens: the subject sits above the cards
 
-const RESPONSE = 0.5; // seconds — critically damped spring on the followed scroll position
+/**
+ * Spring response, seconds. A turn of 90–180° is mostly done in under half a second
+ * and fully settled in about 0.6 s: quick enough to read as a decisive move, long
+ * enough to keep the visitor oriented. Raise it for calmer turns.
+ */
+const RESPONSE = 0.6;
 const OMEGA = (2 * Math.PI) / RESPONSE;
-const REST_EPSILON = 0.1; // px and px/s
-const HOLD = 0.18; // share of each gap, at both ends, where the camera holds still
-const BREATHE = 0.05; // the view widens by up to 5 % while turning
+const HYSTERESIS = 0.06; // share of a gap past the halfway point before the camera turns
+const SHUTTER = 1 / 60; // seconds of motion blurred into one frame
+const BLUR_MAX = 5; // degrees
+const BREATHE = 0.05; // the view widens by up to 5 % at full turning speed
+const BREATHE_SPEED = 500; // degrees per second for the full widening
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
 const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
-const smoothstep = (a: number, b: number, x: number) => {
-  const t = clamp((x - a) / (b - a), 0, 1);
-  return t * t * (3 - 2 * t);
-};
 
 export function tanHalfV(aspect: number) {
   return clamp(Math.tan(rad(FOV_H / 2)) / aspect, Math.tan(rad(FOV_V_MIN / 2)), Math.tan(rad(FOV_V_MAX / 2)));
@@ -64,6 +66,7 @@ uniform sampler2D u_tex;
 uniform vec2 u_scale;  // tan(half fov) * (aspect, 1)
 uniform float u_shift; // vertical lens shift, in NDC
 uniform vec4 u_rot;    // cos yaw, sin yaw, cos pitch, sin pitch
+uniform float u_blur;  // horizontal motion blur, in texture u (a yaw turn is a shift in u)
 uniform float u_sat;
 varying vec2 v_ndc;
 const float PI = 3.141592653589793;
@@ -72,7 +75,16 @@ void main() {
   d = vec3(d.x, d.y * u_rot.z - d.z * u_rot.w, d.y * u_rot.w + d.z * u_rot.z);
   d = vec3(d.x * u_rot.x - d.z * u_rot.y, d.y, d.x * u_rot.y + d.z * u_rot.x);
   vec2 uv = vec2(0.5 + atan(d.x, -d.z) / (2.0 * PI), 0.5 - asin(clamp(d.y, -1.0, 1.0)) / PI);
-  vec3 c = texture2D(u_tex, uv).rgb;
+  vec3 c;
+  if (u_blur > 0.0) {
+    c = vec3(0.0);
+    for (int k = 0; k < 9; k++) {
+      c += texture2D(u_tex, uv + vec2((float(k) / 8.0 - 0.5) * u_blur, 0.0)).rgb;
+    }
+    c /= 9.0;
+  } else {
+    c = texture2D(u_tex, uv).rgb;
+  }
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, u_sat);
   c = ${GRADE_GAIN.toFixed(4)} * pow(clamp(c, 0.0, 1.0), vec3(${GRADE_GAMMA.toFixed(4)}));
@@ -81,16 +93,18 @@ void main() {
 
 interface Stop {
   el: HTMLElement;
+  point: string;
   yaw: number;
   pitch: number;
-  at: number; // scrollY at which this stop is in focus
+  zoom: number;
+  at: number; // scrollY at which this checkpoint's card is in focus
 }
 
 interface View {
   yaw: number;
   pitch: number;
-  breathe: number;
-  index: number; // nearest stop
+  zoom: number;
+  speed: number; // degrees per second, for blur and widening
 }
 
 type ImageSource = ImageBitmap | HTMLImageElement;
@@ -99,10 +113,11 @@ class Renderer {
   private gl: WebGLRenderingContext;
   private program: WebGLProgram | null = null;
   private tex: WebGLTexture | null = null;
-  private loc: Record<'scale' | 'shift' | 'rot' | 'sat', WebGLUniformLocation | null> = {
+  private loc: Record<'scale' | 'shift' | 'rot' | 'blur' | 'sat', WebGLUniformLocation | null> = {
     scale: null,
     shift: null,
     rot: null,
+    blur: null,
     sat: null,
   };
   source: ImageSource | null = null;
@@ -148,6 +163,7 @@ class Renderer {
       scale: gl.getUniformLocation(p, 'u_scale'),
       shift: gl.getUniformLocation(p, 'u_shift'),
       rot: gl.getUniformLocation(p, 'u_rot'),
+      blur: gl.getUniformLocation(p, 'u_blur'),
       sat: gl.getUniformLocation(p, 'u_sat'),
     };
     gl.uniform1f(this.loc.sat, this.sat);
@@ -188,12 +204,15 @@ class Renderer {
     if (!this.ready) return;
     const gl = this.gl;
     const aspect = this.canvas.width / this.canvas.height;
-    const t = tanHalfV(aspect) * (1 + BREATHE * view.breathe);
+    const widen = 1 + BREATHE * Math.min(view.speed / BREATHE_SPEED, 1);
+    const t = tanHalfV(aspect) * view.zoom * widen;
     gl.uniform2f(this.loc.scale, t * aspect, t);
     gl.uniform1f(this.loc.shift, aspect < 1 ? PORTRAIT_SHIFT : 0);
     const y = rad(view.yaw);
     const p = rad(view.pitch);
     gl.uniform4f(this.loc.rot, Math.cos(y), Math.sin(y), Math.cos(p), Math.sin(p));
+    const blur = Math.min(view.speed * SHUTTER, BLUR_MAX);
+    gl.uniform1f(this.loc.blur, blur > 0.05 ? blur / 360 : 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
@@ -216,6 +235,35 @@ async function loadImage(url: string): Promise<ImageSource> {
   return img;
 }
 
+/** One critically damped spring channel, stepped with its exact solution (stable at any frame rate). */
+class Spring {
+  v = 0;
+  constructor(
+    public x: number,
+    public target: number,
+    private eps: number,
+  ) {}
+
+  step(dt: number) {
+    const x0 = this.x - this.target;
+    const e = Math.exp(-OMEGA * dt);
+    const k = this.v + OMEGA * x0;
+    this.x = this.target + (x0 + k * dt) * e;
+    this.v = (this.v - OMEGA * k * dt) * e;
+    if (Math.abs(this.x - this.target) < this.eps && Math.abs(this.v) < this.eps) {
+      this.x = this.target;
+      this.v = 0;
+      return true;
+    }
+    return false;
+  }
+
+  jump(to: number) {
+    this.x = this.target = to;
+    this.v = 0;
+  }
+}
+
 export function initTour() {
   const root = document.querySelector<HTMLElement>('[data-tour]');
   const canvas = root?.querySelector<HTMLCanvasElement>('[data-tour-canvas]');
@@ -224,21 +272,20 @@ export function initTour() {
   const params = new URLSearchParams(location.search);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
-  const endYaw = Number(root.dataset.endYaw);
+  const north = Number(root.dataset.north);
   const compass = root.querySelector<HTMLElement>('[data-tour-compass]');
   const needle = compass?.querySelector<SVGElement>('[data-tour-needle]') ?? null;
   const footer = document.querySelector<HTMLElement>('.footer');
 
   const stops: Stop[] = Array.from(root.querySelectorAll<HTMLElement>('[data-tour-stop]')).map((el) => ({
     el,
-    yaw: Number(el.dataset.yaw),
+    point: el.dataset.point ?? '',
+    yaw: north + Number(el.dataset.bearing),
     pitch: Number(el.dataset.pitch),
+    zoom: Number(el.dataset.zoom) || 1,
     at: 0,
   }));
   if (!stops.length) return;
-  // The end of the page: one full turn after the opening view.
-  const end: Stop = { el: root, yaw: endYaw, pitch: stops[0].pitch, at: 0 };
-  const track = [...stops, end];
 
   let gl: WebGLRenderingContext | null = null;
   try {
@@ -270,12 +317,9 @@ export function initTour() {
 
   // --- Measuring ---------------------------------------------------------------
 
-  let vh = window.innerHeight;
-  let maxScroll = 0;
-
   const measure = () => {
-    vh = window.innerHeight;
-    maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+    const vh = window.innerHeight;
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
     // Tall screens keep the cards low so the room shows above them.
     const anchor = window.innerWidth < window.innerHeight ? 0.7 : 0.5;
     stops.forEach((s, i) => {
@@ -285,65 +329,73 @@ export function initTour() {
       }
       const focus = s.el.querySelector<HTMLElement>('[data-tour-focus]') ?? s.el;
       const r = focus.getBoundingClientRect();
-      s.at = r.top + window.scrollY + r.height / 2 - vh * anchor;
+      s.at = Math.min(r.top + window.scrollY + r.height / 2 - vh * anchor, maxScroll);
     });
-    end.at = maxScroll;
     // Keep the track strictly increasing even on odd layouts.
-    for (let i = 1; i < track.length; i++) track[i].at = Math.max(track[i].at, track[i - 1].at + 1);
+    for (let i = 1; i < stops.length; i++) stops[i].at = Math.max(stops[i].at, stops[i - 1].at + 1);
   };
 
-  // --- Scroll position → view ----------------------------------------------------
-
-  const viewAt = (y: number): View => {
-    if (y <= track[0].at) return { yaw: track[0].yaw, pitch: track[0].pitch, breathe: 0, index: 0 };
-    for (let i = 0; i < track.length - 1; i++) {
-      const a = track[i];
-      const b = track[i + 1];
-      if (y < b.at || i === track.length - 2) {
-        const raw = clamp((y - a.at) / (b.at - a.at), 0, 1);
-        const f = smoothstep(HOLD, 1 - HOLD, raw);
-        return {
-          yaw: a.yaw + (b.yaw - a.yaw) * f,
-          pitch: a.pitch + (b.pitch - a.pitch) * f,
-          breathe: Math.sin(Math.PI * f),
-          index: raw < 0.5 ? i : i + 1,
-        };
-      }
+  /** Continuous position along the checkpoints: 0 at the first, 1 at the second… */
+  const progress = (y: number) => {
+    if (y <= stops[0].at) return 0;
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (y < stops[i + 1].at) return i + (y - stops[i].at) / (stops[i + 1].at - stops[i].at);
     }
-    const last = track[track.length - 1];
-    return { yaw: last.yaw, pitch: last.pitch, breathe: 0, index: track.length - 1 };
+    return stops.length - 1;
   };
 
-  const writeCompass = (yaw: number) => {
-    if (needle) needle.style.transform = `rotate(${(yaw - track[0].yaw).toFixed(2)}deg)`;
+  let active = 0;
+
+  /** The checkpoint that should be active, with hysteresis around each halfway point. */
+  const pick = (y: number) => {
+    const p = progress(y);
+    if (p > active + 0.5 + HYSTERESIS || p < active - 0.5 - HYSTERESIS) {
+      active = clamp(Math.round(p), 0, stops.length - 1);
+    }
+    return active;
   };
 
-  const writeHud = (v: View) => {
-    if (hud) hud.textContent = `yaw ${v.yaw.toFixed(1)}°  pitch ${v.pitch.toFixed(1)}°  tappa ${v.index}`;
+  // --- Camera -------------------------------------------------------------------------
+
+  const yaw = new Spring(stops[0].yaw, stops[0].yaw, 0.01);
+  const pitch = new Spring(stops[0].pitch, stops[0].pitch, 0.01);
+  const zoom = new Spring(stops[0].zoom, stops[0].zoom, 0.0001);
+
+  const aim = (index: number, instant: boolean) => {
+    const s = stops[index];
+    if (instant) {
+      yaw.jump(s.yaw);
+      pitch.jump(s.pitch);
+      zoom.jump(s.zoom);
+    } else {
+      yaw.target = s.yaw;
+      pitch.target = s.pitch;
+      zoom.target = s.zoom;
+    }
+    if (compass) compass.dataset.active = s.point;
   };
 
-  // --- Motion: spring on the followed scroll position ---------------------------
+  const draw = () => {
+    const v: View = { yaw: yaw.x, pitch: pitch.x, zoom: zoom.x, speed: Math.abs(yaw.v) };
+    renderer.draw(v);
+    if (needle) needle.style.transform = `rotate(${(v.yaw - north).toFixed(2)}deg)`;
+    if (hud) hud.textContent = `direzione ${(v.yaw - north).toFixed(1)}°  pitch ${v.pitch.toFixed(1)}°  zoom ${v.zoom.toFixed(2)}  checkpoint ${active}`;
+  };
 
-  const pos = { y: window.scrollY, v: 0 };
   let raf = 0;
   let last = 0;
 
-  const frame = (now: number) => {
-    const dt = Math.min((now - last) / 1000, 1 / 30); // clamp after tab switches
+  const frame = () => {
+    // performance.now(), not the rAF timestamp: the timestamp can predate the wake-up,
+    // which would make the first step negative.
+    const now = performance.now();
+    const dt = clamp((now - last) / 1000, 0, 1 / 20); // clamp after tab switches
     last = now;
-    const target = window.scrollY;
-    pos.v += (OMEGA * OMEGA * (target - pos.y) - 2 * OMEGA * pos.v) * dt;
-    pos.y += pos.v * dt;
-    const settled = Math.abs(target - pos.y) < REST_EPSILON && Math.abs(pos.v) < REST_EPSILON;
-    if (settled) {
-      pos.y = target;
-      pos.v = 0;
-    }
-    const v = viewAt(pos.y);
-    renderer.draw(v);
-    writeCompass(v.yaw);
-    writeHud(v);
-    raf = settled ? 0 : requestAnimationFrame(frame);
+    const a = yaw.step(dt);
+    const b = pitch.step(dt);
+    const c = zoom.step(dt);
+    draw();
+    raf = a && b && c ? 0 : requestAnimationFrame(frame);
   };
 
   const wake = () => {
@@ -352,76 +404,56 @@ export function initTour() {
     raf = requestAnimationFrame(frame);
   };
 
-  // --- Reduced motion: stills, crossfaded at each stop ---------------------------
+  // --- Reduced motion: stills, crossfaded at each checkpoint ----------------------------
 
-  let shown = -1;
   let swap = 0;
 
-  const still = (index: number) => {
-    const s = track[index];
-    return { yaw: s.yaw, pitch: s.pitch, breathe: 0, index };
-  };
-
-  const showStill = (instant = false) => {
-    const index = viewAt(window.scrollY).index;
-    if (index === shown) return;
-    shown = index;
+  const crossfade = (index: number) => {
     window.clearTimeout(swap);
-    const apply = () => {
-      const v = still(index);
-      renderer.draw(v);
-      writeCompass(v.yaw);
-      writeHud(v);
-      canvas.classList.remove('is-swapping');
-    };
-    if (instant) return apply();
     canvas.classList.add('is-swapping');
-    swap = window.setTimeout(apply, 160); // --d-fast: the fade-out, then the new view fades in
+    swap = window.setTimeout(() => {
+      aim(index, true);
+      draw();
+      canvas.classList.remove('is-swapping');
+    }, 160); // --d-fast: the fade-out, then the new view fades in
   };
 
   // --- Wiring ------------------------------------------------------------------------
 
-  const render = () => {
+  const onScroll = () => {
     if (!renderer.ready) return;
+    const before = active;
+    const index = pick(window.scrollY);
+    if (index === before) return;
     if (reduce.matches) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-      showStill();
+      crossfade(index);
     } else {
+      aim(index, false);
       wake();
     }
   };
 
-  const onResize = () => {
+  const settle = () => {
     renderer.resize(Math.min(window.devicePixelRatio || 1, 2));
     measure();
-    pos.y = window.scrollY;
-    pos.v = 0;
     if (!renderer.ready) return;
-    if (reduce.matches) {
-      shown = -1;
-      showStill(true);
-    } else {
-      const v = viewAt(pos.y);
-      renderer.draw(v);
-      writeCompass(v.yaw);
-      writeHud(v);
-    }
+    cancelAnimationFrame(raf);
+    raf = 0;
+    active = clamp(Math.round(progress(window.scrollY)), 0, stops.length - 1);
+    aim(active, true);
+    draw();
   };
 
-  window.addEventListener('scroll', render, { passive: true });
-  new ResizeObserver(onResize).observe(canvas);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  new ResizeObserver(settle).observe(canvas);
   new ResizeObserver(() => {
     measure();
-    render();
+    onScroll();
   }).observe(root);
-  reduce.addEventListener('change', () => {
-    shown = -1;
-    onResize();
-  });
+  reduce.addEventListener('change', settle);
   document.fonts?.ready.then(() => {
     measure();
-    render();
+    onScroll();
   });
 
   if (compass && footer) {
@@ -442,7 +474,7 @@ export function initTour() {
     } catch {
       return;
     }
-    onResize();
+    settle();
     canvas.classList.add('is-live');
   });
 
@@ -454,13 +486,13 @@ export function initTour() {
   loadImage(small)
     .then((img) => {
       renderer.upload(img);
-      onResize();
+      settle();
       // Next frame: the first draw is on screen before the canvas fades in over the poster.
       requestAnimationFrame(() => canvas.classList.add('is-live'));
       if (!saveData && renderer.maxTexture >= 4096) {
         return loadImage(large).then((big) => {
           renderer.upload(big);
-          onResize();
+          draw();
           if (img instanceof ImageBitmap) img.close();
         });
       }

@@ -55,9 +55,11 @@ ffmpeg -i ORIGINALE_02.mp4 -t 7.800 -an -map_metadata -1 -vf "scale=720:1280:fla
 
 ## Visita a 360° (prototipo)
 
-`/visita` è una pagina a parte (`noindex`): un panorama a 360° fisso dietro la pagina, che gira mentre si
-scorre e si ferma a ogni sezione. Lo scroll resta quello nativo del browser. Il panorama è disegnato in WebGL
-senza librerie (`src/scripts/tour.ts`).
+`/visita` è una pagina a parte (`noindex`): un panorama a 360° fisso dietro la pagina, con un checkpoint per
+ogni punto di interesse del locale: il bancone a nord, le due sale a ovest e a est, fuori con i divanetti a sud.
+La camera resta ferma su un punto e, quando si scorre fino al checkpoint successivo, ruota verso il nuovo punto
+con un movimento rapido. Lo scroll resta quello nativo del browser. Il panorama è disegnato in WebGL senza
+librerie (`src/scripts/tour.ts`).
 
 **Il panorama di oggi non è GLASS**: è [Cowboy Town Saloon](https://polyhaven.com/a/cowboy_town_saloon)
 di Poly Haven (CC0), usato solo per provare l'effetto. Anche i testi delle tappe sono segnaposto e indicano
@@ -65,7 +67,7 @@ cosa scriverci.
 
 | Percorso | Contenuto |
 | --- | --- |
-| `src/config/tour.ts` | Tappe: testi e direzione della camera (`yaw`, `pitch`) per ognuna. |
+| `src/config/tour.ts` | Checkpoint: testi, punto cardinale e direzione della camera per ognuno. |
 | `src/components/Tour.astro` | Pagina della visita: panorama, bussola, schede delle tappe. |
 | `src/scripts/tour.ts` | Shader, scroll → rotazione, versione «riduci movimento». |
 | `tools/tour/prepare_pano.py` | Prepara un panorama nuovo (formati e immagini di attesa). |
@@ -74,11 +76,14 @@ cosa scriverci.
 Con la foto vera del locale (un'immagine equirettangolare 2:1, quella di qualunque fotocamera 360°):
 
 ```bash
-python3 -I tools/tour/prepare_pano.py percorso/della/foto.jpg --yaw -150
+python3 -I tools/tour/prepare_pano.py percorso/della/foto.jpg --yaw 110 --pitch 2
 ```
 
-Poi si regolano le direzioni delle tappe in `src/config/tour.ts`: `/visita?hud` mostra in basso a sinistra
-la direzione attuale mentre si scorre. `/visita?colore` mostra il panorama a colori invece che in bianco e nero.
+`--yaw` è il punto della foto in cui sta il nord (il bancone), lo stesso valore di `north` in
+`src/config/tour.ts`; `--pitch` è quello della vista d'apertura. Poi si regolano le direzioni dei checkpoint
+nello stesso file: `/visita?hud` mostra in basso a sinistra la direzione attuale mentre si scorre. La velocità
+della rotazione è `RESPONSE` in `src/scripts/tour.ts` (secondi: più alto, più calma). `/visita?colore` mostra
+il panorama a colori invece che in bianco e nero.
 
 ## Da completare
 

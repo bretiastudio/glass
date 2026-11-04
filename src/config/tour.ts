@@ -1,27 +1,36 @@
 /**
- * The /visita tour: one 360° panorama, turned by scrolling, with a stop per section.
+ * The /visita tour: one 360° panorama with a checkpoint per point of interest.
+ * The camera stays still on a place and, when the next checkpoint is reached,
+ * turns to it in one quick move.
  *
  * PROTOTYPE. The panorama is not GLASS: it is a free test image (CC0) that stands in
  * until the venue is photographed. The texts marked `placeholder` describe what the
  * owner should write there; they are not facts about GLASS.
  *
- * Headings: `yaw` turns right as it grows (0 = centre of the panorama image),
- * `pitch` looks up as it grows. Both in degrees. Yaw must keep growing from stop to
- * stop so the room always turns the same way; the tour ends at `endYaw`, so a full
- * turn is `stops[0].yaw + 360`.
+ * Directions are compass bearings in degrees, clockwise from north: 0 north (the bar),
+ * 90 east, 180 south, -90 west. They are not wrapped: the camera turns from one number
+ * to the next, so going from -90 (west) to 90 (east) sweeps past the bar at 0.
+ * `north` says where north is in the panorama image (its yaw; 0 = centre of the image).
+ * `pitch` looks up as it grows; `zoom` below 1 moves closer.
  *
- * With a new panorama: run tools/tour/prepare_pano.py, then retune the headings
- * here (open /visita?hud to read the current heading while scrolling).
+ * With a new panorama: run tools/tour/prepare_pano.py, set `north` to the bar, then
+ * fine-tune the bearings (open /visita?hud to read them while scrolling).
  */
+export type CompassPoint = 'N' | 'E' | 'S' | 'O';
+
 export interface TourStop {
   id: string;
+  point: CompassPoint;
   label: string;
   title: string;
   text: string;
-  yaw: number;
+  bearing: number;
   pitch: number;
+  zoom: number;
   placeholder: boolean;
 }
+
+export const POINT_NAMES: Record<CompassPoint, string> = { N: 'Nord', E: 'Est', S: 'Sud', O: 'Ovest' };
 
 export const TOUR = {
   panorama: {
@@ -37,46 +46,54 @@ export const TOUR = {
       licence: 'CC0',
     },
   },
-  /** Heading at the very end of the page: one full turn after the first stop. */
-  endYaw: 210,
+  /** Yaw of north (the bar) in the panorama image. */
+  north: 110,
+  /** The opening view, behind the wordmark. */
+  start: { point: 'N' as CompassPoint, bearing: 0, pitch: 2, zoom: 1 },
   stops: [
     {
-      id: 'chi-siamo',
-      label: 'Chi siamo',
-      title: 'Le persone dietro il bancone.',
-      text: 'Chi è GLASS, chi lo guida e che cosa lo rende diverso. Due o tre frasi, con la voce del locale.',
-      yaw: -95,
-      pitch: 2,
-      placeholder: true,
-    },
-    {
-      id: 'storia',
-      label: 'La nostra storia',
-      title: 'Come è nato GLASS.',
-      text: "Quando avete aperto, perché, che cosa è cambiato da allora. Un momento che racconta il posto meglio di un elenco.",
-      yaw: -10,
-      pitch: 0,
-      placeholder: true,
-    },
-    {
       id: 'bancone',
+      point: 'N',
       label: 'Il bancone',
       title: 'Dove nasce ogni drink.',
       text: 'La mixology: i cocktail della casa, gli ingredienti, il modo di lavorare. Qui può comparire anche un link al menu.',
-      yaw: 110,
+      bearing: 0,
       pitch: 3,
+      zoom: 0.86,
       placeholder: true,
     },
     {
-      id: 'atmosfera',
-      label: 'Atmosfera',
-      title: 'Dove ogni riflesso diventa atmosfera.',
-      text: 'Com’è una serata da GLASS: la luce, la musica, il momento migliore per venire.',
-      yaw: 195,
-      pitch: 4,
+      id: 'sala-ovest',
+      point: 'O',
+      label: 'Sala ovest',
+      title: 'La sala ovest.',
+      text: 'Com’è questa sala e per che cosa è pensata: i tavoli, i posti, la luce. Qui può andare anche «Chi siamo».',
+      bearing: -90,
+      pitch: 0,
+      zoom: 1,
+      placeholder: true,
+    },
+    {
+      id: 'sala-est',
+      point: 'E',
+      label: 'Sala est',
+      title: 'La sala est.',
+      text: 'Che cosa la distingue dall’altra sala, e quando è il momento giusto per sedersi qui. Qui può andare anche «La nostra storia».',
+      bearing: 90,
+      pitch: 2,
+      zoom: 1,
+      placeholder: true,
+    },
+    {
+      id: 'fuori',
+      point: 'S',
+      label: 'Fuori, i divanetti',
+      title: 'Fuori, sui divanetti.',
+      text: 'Lo spazio all’aperto: i divanetti, le serate d’estate, quanti posti ci sono e se si può prenotare.',
+      bearing: 180,
+      pitch: 0,
+      zoom: 1,
       placeholder: true,
     },
   ] satisfies TourStop[],
-  /** The opening view, before the first stop. */
-  start: { yaw: -150, pitch: 0 },
 } as const;
